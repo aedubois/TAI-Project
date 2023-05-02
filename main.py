@@ -3,6 +3,7 @@ from gameModule import GUISnakeGame
 from genetic_snake import Snake
 from Astar_snake import IA_Astar
 from dna import Dna
+from QLearningAgent import SnakeQAgent
 import pickle
 from pathlib import Path
 import sys
@@ -44,7 +45,12 @@ def main():
         help="A* algorithm: classical A* algorithm, with "
         "Manhattan distance as heuristic",
     )
-
+    group_algorithm.add_argument(
+        "-q",
+        "--qlearning",
+        action="store_true",
+        help="Q-Learning algorithm: classical Q-Learning algorithm",
+    )
     args = parser.parse_args()
     game = GUISnakeGame()
     game.init_pygame()
@@ -56,6 +62,8 @@ def main():
     elif args.ai:
         if args.astar or args.sshaped:
             agent = IA_Astar(args, game)
+        elif args.q:
+            agent = SnakeQAgent() #TODO : check
         elif args.genetic:
             with open(Path(args.genetic), "rb") as f:
                 weights, bias = pickle.load(f)

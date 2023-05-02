@@ -227,8 +227,49 @@ class SnakeGame:
 
             return self.get_state()
 
+    def is_unsafe(self, r, c):
+        """
+        Check if the next move is unsafe
+        """
+        if (0 <= r < self.rows
+            and 0 <= c < self.columns
+            and self.grid[r][c] in [EMPTY_CHAR, FOOD_CHAR]):
+            return 0
+        return 1
+
     def get_state(self):
         return self.grid, self.score, self.alive, self.snake
+    
+    def get_q_state(self):
+        """Build state for Q-Learner agent"""
+        head_r, head_c = self.snake[0]
+        if len(self.snake) == 1:
+            direction = "right"
+        else:
+            neck_r, neck_c = self.snake[1]
+            if head_r > neck_r:
+                direction = "right"
+            elif head_r < neck_r:
+                direction = "left"
+            elif head_c > neck_c:
+                direction = "down"
+            else:
+                direction = "up"
+        food_r, food_c = self.food
+        state = []
+        state.append(int(self.direction == "left"))
+        state.append(int(self.direction == "right"))
+        state.append(int(self.direction == "up"))
+        state.append(int(self.direction == "down"))
+        state.append(int(self.food_r < head_r))
+        state.append(int(self.food_r > head_r))
+        state.append(int(self.food_c < head_c))
+        state.append(int(self.food_c > head_c))
+        state.append(self.is_unsafe(head_r + 1, head_c))
+        state.append(self.is_unsafe(head_r - 1, head_c))
+        state.append(self.is_unsafe(head_r, head_c + 1))
+        state.append(self.is_unsafe(head_r, head_c - 1))
+        return tuple(state)
 
     def get_grid_base(self, width, height):
         menu_start = width * 2 / 3

@@ -187,6 +187,14 @@ class SnakeGame:
             and self.grid[pos[0]][pos[1]] in [EMPTY_CHAR, FOOD_CHAR]
         )
 
+    def is_unsafe(self, r, c):
+        if (0 <= r < self.rows
+            and 0 <= c < self.columns
+            and self.grid[r][c] in [EMPTY_CHAR, FOOD_CHAR]):
+            return 0
+        return 1
+
+
     def is_next_move_invalid(self):
         if self.previous_move is not None:
             return (
@@ -227,15 +235,7 @@ class SnakeGame:
 
             return self.get_state()
 
-    def is_unsafe(self, r, c):
-        """
-        Check if the next move is unsafe
-        """
-        if (0 <= r < self.rows
-            and 0 <= c < self.columns
-            and self.grid[r][c] in [EMPTY_CHAR, FOOD_CHAR]):
-            return 0
-        return 1
+
 
     def get_state(self):
         return self.grid, self.score, self.alive, self.snake

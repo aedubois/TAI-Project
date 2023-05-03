@@ -32,11 +32,23 @@ class SnakeQAgent():
         # select best action (exploitation)
         return np.argmax(self.table[state])
     
+    def step(action, env): #TODO
+        reward = 0
+        new_pos = (env.snake[0][0] + action[0], env.snake[0][1] + action[1])
+        if not new_pos.is_alive(): 
+            reward = -10
+        if new_pos
+        return new_state, reward, done
+
     def train(self):
         for i in range(1, self.num_episodes + 1):
-            self.env  = SnakeGame()
+            env  = SnakeGame()
+            env.start_run()
+            while env.is_alive():
+                #TODO check
+                env.next_tick()
             steps_without_food = 0
-            length = len(self.env.snake)
+            length = len(env.snake)
                 
             current_state = self.env.get_q_state()
             self.eps = max(self.eps * self.eps_discount, self.min_eps)
@@ -44,7 +56,7 @@ class SnakeQAgent():
             while not done:
                 # choose action and take it
                 action = self.get_action(current_state)
-                new_state, reward, done = self.env.set_next_move(self.adapt_action(action))
+                new_state, reward, done = self.step(self.adapt_action(action), env)
                 
                 # Bellman Equation Update
                 self.table[current_state][action] = (1 - self.learning_rate)\
@@ -53,16 +65,16 @@ class SnakeQAgent():
                 current_state = new_state
                 
                 steps_without_food += 1
-                if length != len(self.env.snake):
-                    length = len(self.env.snake)
+                if length != len(env.snake):
+                    length = len(env.snake)
                     steps_without_food = 0
                 if steps_without_food == 1000:
                     # break out of loops
                     break
             
             # keep tracpoetry run python train.py k of important metrics
-            self.score.append(len(self.env.snake) - 1)
-            self.survived.append(self.env.survived)
+            self.score.append(len(env.snake) - 1)
+            self.survived.append(env.survived)
         np.save('q_tables/q_table.npy', self.table)
 
 

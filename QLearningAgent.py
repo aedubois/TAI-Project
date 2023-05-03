@@ -3,7 +3,7 @@ import random
 from gameModule import SnakeGame
 
 class SnakeQAgent():
-    def __init__(self):
+    def __init__(self, env, args="None"):
         # define initial parameters
         self.discount_rate = 0.95
         self.learning_rate = 0.01
@@ -11,10 +11,17 @@ class SnakeQAgent():
         self.eps_discount = 0.9992
         self.min_eps = 0.001
         self.num_episodes = 10000
-        self.table = np.zeros((2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4))
-        self.env = SnakeGame()
         self.score = []
         self.survived = []
+        self.table = self.create_table(args)
+
+    def create_table(args):
+        if args == "None":
+            return np.zeros((2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4))
+        else:
+            file = "q_tables/" + str(args)
+            loaded_Q_table = np.load(file)
+            return loaded_Q_table
         
     # epsilon-greedy action choice
     def get_action(self, state):
@@ -37,7 +44,7 @@ class SnakeQAgent():
             while not done:
                 # choose action and take it
                 action = self.get_action(current_state)
-                new_state, reward, done = self.env.step(action)
+                new_state, reward, done = self.env.set_next_move(self.adapt_action(action))
                 
                 # Bellman Equation Update
                 self.table[current_state][action] = (1 - self.learning_rate)\
@@ -53,9 +60,11 @@ class SnakeQAgent():
                     # break out of loops
                     break
             
-            # keep track of important metrics
+            # keep tracpoetry run python train.py k of important metrics
             self.score.append(len(self.env.snake) - 1)
             self.survived.append(self.env.survived)
+        np.save('q_tables/q_table.npy', self.table)
+
 
     def eat(self):
         """
@@ -63,3 +72,11 @@ class SnakeQAgent():
         algorithm.
         """
         pass
+
+    def adapt_action(self, action="None"):
+        if action == "None":
+            action = random.choice([(0, -1), (0, 1), (-1, 0), (1, 0)])
+        else:
+            action = [(0, -1), (0, 1), (-1, 0), (1, 0)][action]
+        return action
+    

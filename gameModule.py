@@ -257,14 +257,14 @@ class SnakeGame:
                 direction = "up"
         food_r, food_c = self.food
         state = []
-        state.append(int(self.direction == "left"))
-        state.append(int(self.direction == "right"))
-        state.append(int(self.direction == "up"))
-        state.append(int(self.direction == "down"))
-        state.append(int(self.food_r < head_r))
-        state.append(int(self.food_r > head_r))
-        state.append(int(self.food_c < head_c))
-        state.append(int(self.food_c > head_c))
+        state.append(int(direction == "left"))
+        state.append(int(direction == "right"))
+        state.append(int(direction == "up"))
+        state.append(int(direction == "down"))
+        state.append(int(food_r < head_r))
+        state.append(int(food_r > head_r))
+        state.append(int(food_c < head_c))
+        state.append(int(food_c > head_c))
         state.append(self.is_unsafe(head_r + 1, head_c))
         state.append(self.is_unsafe(head_r - 1, head_c))
         state.append(self.is_unsafe(head_r, head_c + 1))

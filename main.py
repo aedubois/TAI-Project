@@ -63,7 +63,7 @@ def main():
         if args.astar or args.sshaped:
             agent = IA_Astar(args, game)
         elif args.q:
-            agent = SnakeQAgent() #TODO : check
+            agent = SnakeQAgent(game, args)
         elif args.genetic:
             with open(Path(args.genetic), "rb") as f:
                 weights, bias = pickle.load(f)

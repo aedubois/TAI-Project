@@ -15,7 +15,7 @@ class SnakeQAgent():
         self.survived = []
         self.table = self.create_table(args)
 
-    def create_table(args):
+    def create_table(self ,args):
         if args == "None":
             return np.zeros((2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4))
         else:

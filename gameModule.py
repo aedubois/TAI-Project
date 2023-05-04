@@ -121,8 +121,8 @@ class SnakeGame:
 
     def remove_food(self):
         if (
-            self.food is not None
-            and self.grid[self.food[0]][self.food[1]] == FOOD_CHAR
+                self.food is not None
+                and self.grid[self.food[0]][self.food[1]] == FOOD_CHAR
         ):
             self.grid[self.food[0]][self.food[1]] = EMPTY_CHAR
         self.food = None
@@ -182,18 +182,10 @@ class SnakeGame:
 
     def is_collision(self, pos):
         return not (
-            0 <= pos[0] < self.rows
-            and 0 <= pos[1] < self.columns
-            and self.grid[pos[0]][pos[1]] in [EMPTY_CHAR, FOOD_CHAR]
+                0 <= pos[0] < self.rows
+                and 0 <= pos[1] < self.columns
+                and self.grid[pos[0]][pos[1]] in [EMPTY_CHAR, FOOD_CHAR]
         )
-
-    def is_unsafe(self, r, c):
-        if (0 <= r < self.rows
-            and 0 <= c < self.columns
-            and self.grid[r][c] in [EMPTY_CHAR, FOOD_CHAR]):
-            return 0
-        return 1
-
 
     def is_next_move_invalid(self):
         if self.previous_move is not None:
@@ -235,41 +227,8 @@ class SnakeGame:
 
             return self.get_state()
 
-
-
     def get_state(self):
         return self.grid, self.score, self.alive, self.snake
-    
-    def get_q_state(self):
-        """Build state for Q-Learner agent"""
-        head_r, head_c = self.snake[0]
-        if len(self.snake) == 1:
-            direction = "right"
-        else:
-            neck_r, neck_c = self.snake[1]
-            if head_r > neck_r:
-                direction = "right"
-            elif head_r < neck_r:
-                direction = "left"
-            elif head_c > neck_c:
-                direction = "down"
-            else:
-                direction = "up"
-        food_r, food_c = self.food
-        state = []
-        state.append(int(direction == "left"))
-        state.append(int(direction == "right"))
-        state.append(int(direction == "up"))
-        state.append(int(direction == "down"))
-        state.append(int(food_r < head_r))
-        state.append(int(food_r > head_r))
-        state.append(int(food_c < head_c))
-        state.append(int(food_c > head_c))
-        state.append(self.is_unsafe(head_r + 1, head_c))
-        state.append(self.is_unsafe(head_r - 1, head_c))
-        state.append(self.is_unsafe(head_r, head_c + 1))
-        state.append(self.is_unsafe(head_r, head_c - 1))
-        return tuple(state)
 
     def get_grid_base(self, width, height):
         menu_start = width * 2 / 3
@@ -294,7 +253,7 @@ class GUISnakeGame(SnakeGame):
     def next_tick(self, learning_agent=None):
         self.process_event(learning_agent)
         if self.is_alive() and (
-            self.frame / FPS >= 1 / self.get_mps() or learning_agent is not None
+                self.frame / FPS >= 1 / self.get_mps() or learning_agent is not None
         ):
             self.move_snake()
             if self.foodEaten and learning_agent:

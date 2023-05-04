@@ -51,31 +51,32 @@ def main():
         action="store_true",
         help="Q-Learning algorithm: classical Q-Learning algorithm",
     )
-    args = parser.parse_args()
+    # args = parser.parse_args()
     game = GUISnakeGame()
     game.init_pygame()
+    agent = SnakeQAgent("327725.npy", game)
 
-    agent = None
-    if args.player:
-        agent = None
-
-    elif args.ai:
-        if args.astar or args.sshaped:
-            agent = IA_Astar(args, game)
-        elif args.q:
-            agent = SnakeQAgent(game, args)
-        elif args.genetic:
-            with open(Path(args.genetic), "rb") as f:
-                weights, bias = pickle.load(f)
-            agent = Snake(Dna(weights, bias))
-
-    else:
-        parser.print_help()
-        print()
-        print("Please choose mode")
-        sys.exit()
-
-    print(agent)
+    # agent = None
+    # if args.player:
+    #     agent = None
+    #
+    # elif args.ai:
+    #     if args.astar or args.sshaped:
+    #         agent = IA_Astar(args, game)
+    #     elif args.q:
+    #         agent = SnakeQAgent(game, args)
+    #     elif args.genetic:
+    #         with open(Path(args.genetic), "rb") as f:
+    #             weights, bias = pickle.load(f)
+    #         agent = Snake(Dna(weights, bias))
+    #
+    # else:
+    #     parser.print_help()
+    #     print()
+    #     print("Please choose mode")
+    #     sys.exit()
+    #
+    # print(agent)
 
     while game.is_running():
         game.next_tick(agent)

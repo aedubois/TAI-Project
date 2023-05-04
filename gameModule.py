@@ -239,6 +239,45 @@ class SnakeGame:
         horizontal_start = (menu_start - self.columns * gap) // 2
         return gap, vertical_start, horizontal_start, menu_start
 
+    def get_q_state(self):
+        """Build state for Q-Learner agent"""
+        head_r, head_c = self.snake[0]
+        direction = self.get_direction()
+        food_r, food_c = self.food
+
+        state = [
+            int(direction == "left"), int(direction == "right"), int(direction == "up"), int(direction == "down"),
+            int(food_r < head_r), int(food_r > head_r), int(food_c < head_c), int(food_c > head_c),
+            self.is_unsafe(head_r + 1, head_c), self.is_unsafe(head_r - 1, head_c),
+            self.is_unsafe(head_r, head_c + 1), self.is_unsafe(head_r, head_c - 1)]
+
+        return tuple(state)
+
+    def get_direction(self):
+        if len(self.snake) == 1:
+            return "right"
+
+        head_r, head_c = self.snake[0]
+        neck_r, neck_c = self.snake[1]
+
+        if head_r > neck_r:
+            return "right"
+        if head_r < neck_r:
+            return "left"
+        if head_c > neck_c:
+            return "down"
+        else:
+            return "up"
+
+    def is_unsafe(self, r, c):
+        """
+        Check if the next move is unsafe
+        """
+        if self.is_collision((r, c)):
+            return 1
+        else:
+            return 0
+
 
 class GUISnakeGame(SnakeGame):
     DEFAULT_WIDTH = 900

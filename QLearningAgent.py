@@ -17,11 +17,11 @@ class SnakeQAgent:
         else:
             return np.load("q_tables/" + str(file_name))
 
-    def save_q_table(self):
+    def save_q_table(self, file_name):
         q_tables_dir = "q_tables/"
         if not os.path.exists(q_tables_dir):
             os.makedirs(q_tables_dir)
-        np.save(q_tables_dir + str(random.randint(0, 1000000)), self.table)
+        np.save(q_tables_dir + file_name, self.table)
 
     def choose_next_move(self, state):
         q_state = self.current_game.get_q_state()
@@ -42,7 +42,7 @@ class SnakeQAgent:
 
             print(f"Episode {i} finished. Highest_Score: {highest_score}. Current_Score: {self.current_game.score}")
 
-        self.save_q_table()
+        self.save_q_table(highest_score)
 
     def eat(self):
         """

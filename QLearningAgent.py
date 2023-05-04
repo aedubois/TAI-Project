@@ -5,6 +5,7 @@ from gameModule import SnakeGame, RIGHT, LEFT, UP, DOWN
 
 MOVES = [LEFT, RIGHT, UP, DOWN]
 
+
 class SnakeQAgent:
     def __init__(self, q_table_file_name="None", game=None):
         self.table = self.get_q_table(q_table_file_name)
@@ -98,9 +99,8 @@ class TrainingSnakeGame(SnakeGame):
         if not self.is_alive():
             return -10
 
-
-
         return -0.1
+
     def bellman(self, table, current_state, action, new_state, reward, agent):
         table[current_state][action] = (1 - agent.learning_rate) \
                                        * table[current_state][action] + agent.learning_rate \

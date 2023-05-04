@@ -15,7 +15,7 @@ class SnakeQAgent:
         self.eps = 1.0
         self.eps_discount = 0.9992
         self.min_eps = 0.001
-        self.num_episodes = 100_000
+        self.num_episodes = 10_000
 
     def get_q_table(self, file_name):
         if file_name == "None":
@@ -27,7 +27,7 @@ class SnakeQAgent:
         q_tables_dir = "q_tables/"
         if not os.path.exists(q_tables_dir):
             os.makedirs(q_tables_dir)
-        np.save(q_tables_dir + file_name, self.table)
+        np.save(q_tables_dir + str(file_name), self.table)
 
     def choose_next_move(self, state):
         q_state = self.current_game.get_q_state()

@@ -7,9 +7,14 @@ MOVES = [LEFT, RIGHT, UP, DOWN]
 
 class SnakeQAgent:
     def __init__(self, q_table_file_name="None", game=None):
-        self.num_episodes = 1_000_000
         self.table = self.get_q_table(q_table_file_name)
         self.current_game = game
+        self.discount_rate = 0.95
+        self.learning_rate = 0.01
+        self.eps = 1.0
+        self.eps_discount = 0.9992
+        self.min_eps = 0.001
+        self.num_episodes = 100_000
 
     def get_q_table(self, file_name):
         if file_name == "None":
@@ -34,8 +39,7 @@ class SnakeQAgent:
             self.current_game = TrainingSnakeGame()
             self.current_game.start_run()
 
-            while self.current_game.is_alive():
-                self.current_game.next_tick(self)
+            self.current_game.train_one_game(self)
 
             if self.current_game.score > highest_score:
                 highest_score = self.current_game.score
@@ -62,15 +66,13 @@ class SnakeQAgent:
 class TrainingSnakeGame(SnakeGame):
     def __init__(self):
         super(TrainingSnakeGame, self).__init__()
-        self.discount_rate = 0.95
-        self.learning_rate = 0.01
-        self.eps = 1.0
-        self.eps_discount = 0.95
-        self.min_eps = 0.001
+
+    def train_one_game(self, agent):
+        agent.eps = max(agent.eps * agent.eps_discount, agent.min_eps)
+        while self.is_alive():
+            self.next_tick(agent)
 
     def next_tick(self, agent):
-        self.eps = max(self.eps * self.eps_discount, self.min_eps)
-
         current_state = self.get_q_state()
         next_move = self.get_next_move(current_state, agent)
 
@@ -78,19 +80,28 @@ class TrainingSnakeGame(SnakeGame):
         self.move_snake()
 
         new_state = self.get_q_state()
-        reward = 1 if self.foodEaten else -10 if not self.alive else -1
+        reward = self.get_reward()
 
         if reward is not None:
-            self.bellman(agent.table, current_state, MOVES.index(next_move), new_state, reward)
+            self.bellman(agent.table, current_state, MOVES.index(next_move), new_state, reward, agent)
 
     # epsilon-greedy action choice
     def get_next_move(self, state, agent):
-        if random.random() < self.eps:
+        if random.random() < agent.eps:
             return MOVES[random.choice([0, 1, 2, 3])]
         else:
             return agent.choose_next_move(state)
 
-    def bellman(self, table, current_state, action, new_state, reward):
-        table[current_state][action] = (1 - self.learning_rate) \
-                                       * table[current_state][action] + self.learning_rate \
-                                       * (reward + self.discount_rate * max(table[new_state]))
+    def get_reward(self):
+        if self.foodEaten:
+            return 1
+        if not self.is_alive():
+            return -10
+
+
+
+        return -0.1
+    def bellman(self, table, current_state, action, new_state, reward, agent):
+        table[current_state][action] = (1 - agent.learning_rate) \
+                                       * table[current_state][action] + agent.learning_rate \
+                                       * (reward + agent.discount_rate * max(table[new_state]))

@@ -93,6 +93,8 @@ class TrainingSnakeGame(SnakeGame):
         else:
             return agent.choose_next_move(state)
 
+    # TODO: consider more cases like the possibility of a near body collision,
+    #  the age of the agent, and such
     def get_reward(self):
         if self.foodEaten:
             return 1

@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import random
+
 from gameModule import SnakeGame, RIGHT, LEFT, UP, DOWN
 
 MOVES = [LEFT, RIGHT, UP, DOWN]
@@ -13,7 +14,7 @@ class SnakeQAgent:
         self.discount_rate = 0.95
         self.learning_rate = 0.01
         self.eps = 1.0
-        self.eps_discount = 0.9992
+        self.eps_discount = 0.992
         self.min_eps = 0.001
         self.num_episodes = 10_000
 
@@ -45,9 +46,9 @@ class SnakeQAgent:
             if self.current_game.score > highest_score:
                 highest_score = self.current_game.score
 
-            print(f"Episode {i} finished. Highest_Score: {highest_score}. Current_Score: {self.current_game.score}")
+            print(f"Episode {i} finished. Highest_Score: {highest_score}. Current_Score: {self.current_game.score}", "current espilon: ", self.eps)
 
-        self.save_q_table(highest_score)
+        self.save_q_table(str(highest_score))
 
     def eat(self):
         """

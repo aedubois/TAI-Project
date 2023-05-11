@@ -3,8 +3,6 @@ import numpy as np
 import random
 from gameModule import SnakeGame, RIGHT, LEFT, UP, DOWN
 
-MOVES = [LEFT, RIGHT, UP, DOWN]
-
 
 class SnakeQAgent:
     def __init__(self, q_table_file_name="None", game=None):
@@ -16,6 +14,7 @@ class SnakeQAgent:
         self.eps_discount = 0.9992
         self.min_eps = 0.001
         self.num_episodes = 10_000
+        self.moves = [LEFT, RIGHT, UP, DOWN]
 
     def get_q_table(self, file_name):
         if file_name == "None":
@@ -31,7 +30,7 @@ class SnakeQAgent:
 
     def choose_next_move(self, state):
         q_state = self.current_game.get_q_state()
-        return MOVES[np.argmax(self.table[q_state])]
+        return self.moves[np.argmax(self.table[q_state])]
 
     def train(self):
         highest_score = 0
@@ -84,12 +83,12 @@ class TrainingSnakeGame(SnakeGame):
         reward = self.get_reward()
 
         if reward is not None:
-            self.bellman(agent.table, current_state, MOVES.index(next_move), new_state, reward, agent)
+            self.bellman(agent.table, current_state, agent.moves.index(next_move), new_state, reward, agent)
 
     # epsilon-greedy action choice
     def get_next_move(self, state, agent):
         if random.random() < agent.eps:
-            return MOVES[random.choice([0, 1, 2, 3])]
+            return agent.moves[random.choice([0, 1, 2, 3])]
         else:
             return agent.choose_next_move(state)
 

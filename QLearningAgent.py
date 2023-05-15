@@ -2,6 +2,7 @@ import os
 import numpy as np
 import random
 
+from Qplot import plot
 from gameModule import SnakeGame, RIGHT, LEFT, UP, DOWN
 
 MOVES = [LEFT, RIGHT, UP, DOWN]
@@ -36,6 +37,9 @@ class SnakeQAgent:
 
     def train(self):
         highest_score = 0
+        total_score = 0
+        plot_scores = []
+        plot_mean_scores = []
 
         for i in range(1, self.num_episodes + 1):
             self.current_game = TrainingSnakeGame()
@@ -47,6 +51,12 @@ class SnakeQAgent:
                 highest_score = self.current_game.score
 
             print(f"Episode {i} finished. Highest_Score: {highest_score}. Current_Score: {self.current_game.score}", "current espilon: ", self.eps)
+
+            plot_scores.append(self.current_game.score)
+            total_score += self.current_game.score
+            mean_score = total_score / self.num_episodes + 1
+            plot_mean_scores.append(mean_score)
+        plot(plot_scores, plot_mean_scores, highest_score)
 
         self.save_q_table(str(highest_score))
 

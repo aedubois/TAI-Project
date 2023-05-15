@@ -10,6 +10,8 @@ python = ">=3.9"
 pygame = ">=2"
 numpy = ">=1.19"
 torch = "^2.0.1"
+matplotlib = "^3.7.1"
+ipython = "^8.13.2"
 
 [tool.poetry.dev-dependencies]
 

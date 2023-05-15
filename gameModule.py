@@ -337,13 +337,16 @@ class GUISnakeGame(SnakeGame):
 
     def next_tick(self, learning_agent=None):
         self.process_event(learning_agent)
+        print("alive: ", self.is_alive())
         if self.is_alive() and (
                 self.frame / FPS >= 1 / self.get_mps() or learning_agent is not None
         ):
+            print("begin moving snake")
             self.move_snake()
             if self.foodEaten and learning_agent:
                 learning_agent.eat()
             self.frame = 0
+
         # drawing on screen
         self.draw()
         self.clock.tick(FPS)
@@ -409,9 +412,11 @@ class GUISnakeGame(SnakeGame):
                     self.remove(pos)
 
         if self.is_alive() and learning_agent is not None:
+
             self.set_next_move(
                 learning_agent.choose_next_move(self.get_state())
             )
+            print("set next move is :", self.next_move)
 
     def init_pygame(self):
         pygame.init()

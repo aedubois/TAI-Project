@@ -55,8 +55,8 @@ def main():
     # args = parser.parse_args()
     game = GUISnakeGame()
     game.init_pygame()
-    agent = DeepQlearningAgent("model.pth", game)
-    #agent = SnakeQAgent("60.npy", game)
+    #agent = DeepQlearningAgent("model.pth", game)
+    agent = SnakeQAgent("60.npy", game)
 
     # agent = None
     # if args.player:

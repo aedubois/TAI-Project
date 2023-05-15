@@ -208,6 +208,7 @@ class SnakeGame:
             self.foodEaten = False
             head = self.snake[0]
             new_pos = (head[0] + self.next_move[0], head[1] + self.next_move[1])
+
             if self.is_collision(new_pos):
                 self.alive = False
                 if self.score > self.best_score:
@@ -254,20 +255,18 @@ class SnakeGame:
         return tuple(state)
 
     def get_direction(self):
-        if len(self.snake) == 1:
+        if self.previous_move not in [RIGHT, LEFT, UP, DOWN]:
+            # default direction when starting
             return "right"
 
-        head_r, head_c = self.snake[0]
-        neck_r, neck_c = self.snake[1]
-
-        if head_r > neck_r:
+        if self.previous_move == RIGHT:
             return "right"
-        if head_r < neck_r:
+        if self.previous_move == LEFT:
             return "left"
-        if head_c > neck_c:
-            return "down"
-        else:
+        if self.previous_move == UP:
             return "up"
+        if self.previous_move == DOWN:
+            return "down"
 
     def is_unsafe(self, r, c):
         """

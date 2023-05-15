@@ -13,23 +13,26 @@ MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
 class DeepQlearningAgent:
-    def __init__(self, q_table_file_name="None", game=None):
+    def __init__(self, deep_q_model_file_name="None", game=None):
 
         self.current_game = game
-        self.discount_rate = 0.95
-        self.learning_rate = 0.01
-        self.eps = 1.0
-        self.eps_discount = 0.992
+        self.discount_rate = 0.90
+        self.eps = 1
+        self.eps_discount = 0.9995
         self.min_eps = 0.001
         self.num_episodes = 10_000
         self.moves = [LEFT, RIGHT, UP, DOWN]
-
-        self.model = Qnet(12, 256, 3)
+        self.model = Qnet(11, 256, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.discount_rate)
 
         self.memory = deque(maxlen=MAX_MEMORY)
 
+        if deep_q_model_file_name != "None":
+            self.model = self.model.load_model(deep_q_model_file_name, 11, 256, 3)
+
+
     def choose_next_move(self, state):
+        state = self.current_game.get_deep_q_state()
         final_move = [0, 0, 0]
         state0 = torch.tensor(state, dtype=torch.float)
         prediction = self.model(state0)
@@ -48,8 +51,6 @@ class DeepQlearningAgent:
 
         states, actions, rewards, next_states, dones = zip(*mini_sample)
         self.trainer.train_step(states, actions, rewards, next_states, dones)
-        # for state, action, reward, nexrt_state, done in mini_sample:
-        #    self.trainer.train_step(state, action, reward, next_state, done)
 
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)
@@ -98,16 +99,18 @@ class TrainingSnakeGame(SnakeGame):
 
         agent.train_long_memory()
     def next_tick(self, agent):
-        current_state = self.get_q_state()
-        next_move = self.get_next_move(current_state, agent) # [1,0,0]
+        current_state = self.get_deep_q_state()
+        next_move = self.get_next_move(current_state, agent)
 
         next_move = self.convert_move(next_move)
 
         self.set_next_move(next_move)
         self.move_snake()
+        #print("Mon coup est :", next_move," et ma direction est", self.get_direction()," mon prochain coup sera ", self.previous_move)
 
-        new_state = self.get_q_state()
+        new_state = self.get_deep_q_state()
         reward = self.get_reward()
+
 
         # train short memory
         agent.train_short_memory(current_state, next_move, reward, new_state, self.is_alive())
@@ -127,7 +130,7 @@ class TrainingSnakeGame(SnakeGame):
             new_point = (start_point-1)%4
             return self.convert_dir(moves[new_point])
 
-    def convert_dir(self,direction):
+    def convert_dir(self, direction):
         if direction == "left":
             return LEFT
         elif direction == "right":
@@ -148,8 +151,8 @@ class TrainingSnakeGame(SnakeGame):
     #  the age of the agent, and such
     def get_reward(self):
         if self.foodEaten:
-            return 1
+            return 10
         if not self.is_alive():
             return -10
+        return 0
 
-        return -0.1

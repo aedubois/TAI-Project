@@ -1,3 +1,4 @@
+import numpy as np
 import pygame, random, time
 from pathlib import Path
 
@@ -253,6 +254,52 @@ class SnakeGame:
             self.is_unsafe(head_r, head_c + 1), self.is_unsafe(head_r, head_c - 1)]
 
         return tuple(state)
+
+    def get_deep_q_state(self):
+        head = self.snake[0]
+        point_l = (head[0] - 1, head[1])
+        point_r = (head[0] + 1, head[1])
+        point_u = (head[0], head[1] - 1)
+        point_d = (head[0], head[1] + 1)
+
+        dir_l = self.get_direction() == "up"
+        dir_r = self.get_direction() == "down"
+        dir_u = self.get_direction() == "left"
+        dir_d = self.get_direction() == "right"
+
+        state = [
+            # Danger straight
+            (dir_r and self.is_collision(point_r)) or
+            (dir_l and self.is_collision(point_l)) or
+            (dir_u and self.is_collision(point_u)) or
+            (dir_d and self.is_collision(point_d)),
+
+            # Danger right
+            (dir_u and self.is_collision(point_r)) or
+            (dir_d and self.is_collision(point_l)) or
+            (dir_l and self.is_collision(point_u)) or
+            (dir_r and self.is_collision(point_d)),
+
+            # Danger left
+            (dir_d and self.is_collision(point_r)) or
+            (dir_u and self.is_collision(point_l)) or
+            (dir_r and self.is_collision(point_u)) or
+            (dir_l and self.is_collision(point_d)),
+
+            # Move direction
+            dir_l,
+            dir_r,
+            dir_u,
+            dir_d,
+
+            # Food location
+            self.food[0] < head[0],  # food left
+            self.food[0] > head[0],  # food right
+            self.food[1] < head[1],  # food up
+            self.food[1] > head[1]  # food down
+        ]
+
+        return np.array(state, dtype=int)
 
     def get_direction(self):
         if self.previous_move not in [RIGHT, LEFT, UP, DOWN]:

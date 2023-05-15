@@ -2,6 +2,7 @@ import os
 import numpy as np
 import random
 import torch
+from DeepQplot import deep_plot
 from Model import Qnet, QTrainer
 from gameModule import SnakeGame, RIGHT, LEFT, UP, DOWN
 from collections import deque
@@ -56,6 +57,9 @@ class DeepQlearningAgent:
 
     def train(self):
         highest_score = 0
+        total_score = 0
+        plot_scores = []
+        plot_mean_scores = []
 
         for i in range(1, self.num_episodes + 1):
             self.current_game = TrainingSnakeGame()
@@ -68,6 +72,12 @@ class DeepQlearningAgent:
                 self.model.save()
 
             print(f"Episode {i} finished. Highest_Score: {highest_score}. Current_Score: {self.current_game.score}", "current espilon: ", self.eps)
+
+            plot_scores.append(self.current_game.score)
+            total_score += self.current_game.score
+            mean_score = total_score / self.num_episodes + 1
+            plot_mean_scores.append(mean_score)
+        deep_plot(plot_scores, plot_mean_scores, highest_score)
 
 
 

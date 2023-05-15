@@ -253,7 +253,18 @@ class SnakeGame:
             self.is_unsafe(head_r + 1, head_c), self.is_unsafe(head_r - 1, head_c),
             self.is_unsafe(head_r, head_c + 1), self.is_unsafe(head_r, head_c - 1)]
 
+        """"
+        for col in self.grid:
+            for row in col:
+                state.append(self.char_in_int(row))
+        """
+
         return tuple(state)
+
+
+    def char_in_int(self,char):
+        cells = ["+"," ","#","@","A","S","C"]
+        return cells.index(char)
 
     def get_deep_q_state(self):
         head = self.snake[0]

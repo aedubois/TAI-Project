@@ -24,13 +24,6 @@ class Qnet(nn.Module):
         file_name = os.path.join(model_folder_path, file_name)
         torch.save(self.state_dict(), file_name)
 
-    def load_model(self, filename, input_size, hidden_size, output_size):
-        model = Qnet(input_size, hidden_size, output_size)  # Create an instance of the model
-        model.load_state_dict(torch.load("./model/" + filename))  # Load the saved model parameters
-        model.eval()  # Set the model to evaluation mode
-
-        return model
-
 
 class QTrainer:
     def __init__(self, model, lr, gamma):
@@ -74,3 +67,6 @@ class QTrainer:
         loss.backward()
 
         self.optimizer.step()
+
+
+

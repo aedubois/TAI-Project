@@ -32,7 +32,7 @@ SPEED = 100000
 
 class SnakeGameAI:
 
-    def __init__(self, w=640, h=480):
+    def __init__(self, w=400, h=400):
         self.w = w
         self.h = h
         # init display
@@ -44,7 +44,6 @@ class SnakeGameAI:
     def reset(self):
         # init game state
         self.direction = Direction.RIGHT
-
         self.head = Point(self.w / 2, self.h / 2)
         self.snake = [self.head,
                       Point(self.head.x - BLOCK_SIZE, self.head.y),

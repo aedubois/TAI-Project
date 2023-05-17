@@ -1,7 +1,8 @@
 from DeepQlearningAgent import DeepQlearningAgent
-
+from agent import Agent
+from DQLAgent import DQLAgent
 def main():
-    agent = DeepQlearningAgent()
+    agent = DQLAgent()
     agent.train()
 
 

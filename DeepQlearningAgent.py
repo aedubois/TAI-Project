@@ -20,18 +20,10 @@ class DeepQlearningAgent:
 
         self.current_game = game
         self.discount_rate = 0.90
-        self.eps = 1
-        self.eps_discount = 0.992
-        self.min_eps = 0.001
         self.num_episodes = 10_000
-        self.moves = [LEFT, RIGHT, UP, DOWN]
         self.model = Qnet(11, 256, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.discount_rate)
-
         self.memory = deque(maxlen=MAX_MEMORY)
-
-        if deep_q_model_file_name != "None":
-            self.model = self.model.load_model(deep_q_model_file_name, 11, 256, 3)
 
 
     def choose_next_move(self, state):
@@ -41,28 +33,6 @@ class DeepQlearningAgent:
         move = torch.argmax(prediction).item()
         final_move[move] = 1
         return final_move
-    def convert_move(self,next_move):
-        moves = ["right", "down", "left", "up"]
-        direct = self.current_game.get_direction()
-        start_point = moves.index(direct)
-        if next_move[0] == 1:
-            return self.convert_dir(direct)
-        if next_move[1] == 1:
-            new_point = (start_point+1)%4
-            return self.convert_dir(moves[new_point])
-        if next_move[2] == 1:
-            new_point = (start_point-1)%4
-            return self.convert_dir(moves[new_point])
-
-    def convert_dir(self, direction):
-        if direction == "left":
-            return LEFT
-        elif direction == "right":
-            return RIGHT
-        elif direction == "up":
-            return UP
-        elif direction == "down":
-            return DOWN
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))  # popleft if MAX_MEMORY is reached
 
@@ -85,22 +55,6 @@ class DeepQlearningAgent:
         self.current_game.train_one_game(self)
 
         print(f"Episode finished. Highest_Score: {highest_score}. Current_Score: {self.current_game.score}", "current espilon: ", self.eps)
-
-
-
-    def eat(self):
-        """
-        This function is useless here, it is a placeholder for a function needed in the other
-        algorithm.
-        """
-        pass
-
-    def reset_state(self):
-        """
-        This function is useless here, it is a placeholder for a function needed in the other
-        algorithm.
-        """
-        pass
 
     def get_state(self, game):
         head = game.snake[0]
@@ -160,9 +114,7 @@ class TrainingSnakeGame(SnakeGameAI):
         super(TrainingSnakeGame, self).__init__()
 
 
-
     def train_one_game(self, agent):
-        agent.eps = max(agent.eps * agent.eps_discount, agent.min_eps)
         record = 0
         n_games = 0
         while True:
@@ -191,47 +143,6 @@ class TrainingSnakeGame(SnakeGameAI):
                 agent.model.save()
             print('Game', n_games, 'Score', score, 'Record:', record)
         return n_games,record
-
-
-    def convert_move(self,next_move):
-        moves = ["right", "down", "left", "up"]
-        direct = self.get_direction()
-        start_point = moves.index(direct)
-        if next_move[0] == 1:
-            return self.convert_dir(direct)
-        if next_move[1] == 1:
-            new_point = (start_point+1)%4
-            return self.convert_dir(moves[new_point])
-        if next_move[2] == 1:
-            new_point = (start_point-1)%4
-            return self.convert_dir(moves[new_point])
-
-    def convert_dir(self, direction):
-        if direction == "left":
-            return LEFT
-        elif direction == "right":
-            return RIGHT
-        elif direction == "up":
-            return UP
-        elif direction == "down":
-            return DOWN
-
-    # epsilon-greedy action choice
-    def get_next_move(self, state, agent):
-        if random.random() < agent.eps:
-
-            return DMOVES[random.choice([0, 1, 2])]
-        else:
-            return agent.choose_next_move(state)
-
-    # TODO: consider more cases like the possibility of a near body collision,
-    #  the age of the agent, and such
-    def get_reward(self):
-        if self.foodEaten:
-            return 10
-        if not self.is_alive():
-            return -10
-        return -0.1
 
     def get_action(self, state, n_games, agent):
         # random moves: tradeoff exploration / exploitation

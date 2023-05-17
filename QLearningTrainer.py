@@ -1,5 +1,4 @@
 from QLearningAgent import SnakeQAgent
-
 def main():
     agent = SnakeQAgent()
     agent.train()

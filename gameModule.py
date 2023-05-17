@@ -24,12 +24,21 @@ NEW_CHAR = "A"
 S_CHAR = "S"
 CLOSED_CHAR = "C"
 
+from enum import Enum
+from collections import namedtuple
+class Direction(Enum):
+    RIGHT = 1
+    LEFT = 2
+    UP = 3
+    DOWN = 4
+
+Point = namedtuple('Point', 'x, y')
 
 class SnakeGame:
     def __init__(self):
         self.run = True
-        self.rows = 20
-        self.columns = 20
+        self.rows = 40
+        self.columns = 40
         self.grid = [
             [" " for j in range(self.rows)] for i in range(self.columns)
         ]
@@ -173,6 +182,7 @@ class SnakeGame:
         self.previous_move = None
         self.next_move = None
         self.spawn_snake()
+        print("snake: ", self.snake)
         self.spawn_food()
         self.start_time = time.time()
         self.current_time = self.start_time
@@ -221,14 +231,26 @@ class SnakeGame:
                     self.score += 1
                     self.foodEaten = True
                     self.spawn_food()
+
                 else:
                     tail = self.snake.pop()
                     self.grid[tail[0]][tail[1]] = EMPTY_CHAR
                 self.previous_move = self.next_move
                 self.next_move = None
 
-            return self.get_state()
+            return self.get_state(), self.foodEaten
 
+    def play_step(self):
+        (grid, score, alive, snake), foodEaten = self.move_snake()
+
+        return self.get_reward(alive, foodEaten), not alive, score
+    def get_reward(self, alive, foodEaten):
+        if not alive:
+            return -10
+        elif foodEaten:
+            return 10
+        else:
+            return 0
     def get_state(self):
         return self.grid, self.score, self.alive, self.snake
 
@@ -248,10 +270,23 @@ class SnakeGame:
         food_r, food_c = self.food
 
         state = [
-            int(direction == "left"), int(direction == "right"), int(direction == "up"), int(direction == "down"),
-            int(food_r < head_r), int(food_r > head_r), int(food_c < head_c), int(food_c > head_c),
-            self.is_unsafe(head_r + 1, head_c), self.is_unsafe(head_r - 1, head_c),
-            self.is_unsafe(head_r, head_c + 1), self.is_unsafe(head_r, head_c - 1)]
+
+            int(direction == "left"),
+            int(direction == "right"),
+            int(direction == "up"),
+            int(direction == "down"),
+
+            int(food_r < head_r),
+            int(food_r > head_r),
+            int(food_c < head_c),
+            int(food_c > head_c),
+
+            self.is_unsafe(head_r + 1, head_c),
+            self.is_unsafe(head_r - 1, head_c),
+            self.is_unsafe(head_r, head_c + 1),
+            self.is_unsafe(head_r, head_c - 1)
+
+        ]
 
         """"
         for col in self.grid:
@@ -259,24 +294,26 @@ class SnakeGame:
                 state.append(self.char_in_int(row))
         """
 
-        return tuple(state)
-
+        return np.array(state, dtype=int)
 
     def char_in_int(self,char):
         cells = ["+"," ","#","@","A","S","C"]
         return cells.index(char)
 
     def get_deep_q_state(self):
-        head = self.snake[0]
-        point_l = (head[0] - 1, head[1])
-        point_r = (head[0] + 1, head[1])
-        point_u = (head[0], head[1] - 1)
-        point_d = (head[0], head[1] + 1)
 
-        dir_l = self.get_direction() == "up"
-        dir_r = self.get_direction() == "down"
-        dir_u = self.get_direction() == "left"
-        dir_d = self.get_direction() == "right"
+        head = Point(self.snake[0][0], self.snake[0][1])
+        food = Point(self.food[0], self.food[1])
+
+        point_l = Point(head.x - 1, head.y)
+        point_r = Point(head.x + 1, head.y)
+        point_u = Point(head.x, head.y - 1)
+        point_d = Point(head.x, head.y + 1)
+
+        dir_l = self.get_direction() == "left"
+        dir_r = self.get_direction() == "right"
+        dir_u = self.get_direction() == "up"
+        dir_d = self.get_direction() == "down"
 
         state = [
             # Danger straight
@@ -304,10 +341,10 @@ class SnakeGame:
             dir_d,
 
             # Food location
-            self.food[0] < head[0],  # food left
-            self.food[0] > head[0],  # food right
-            self.food[1] < head[1],  # food up
-            self.food[1] > head[1]  # food down
+            food.x < head.x,  # food left
+            food.x > head.x,  # food right
+            food.y < head.y,  # food up
+            food.y > head.y  # food down
         ]
 
         return np.array(state, dtype=int)

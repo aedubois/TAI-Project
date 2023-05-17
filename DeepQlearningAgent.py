@@ -9,7 +9,8 @@ MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
 
-class Agent:
+
+class DeepQLearningAgent:
     def __init__(self):
         self.n_games = 0
         self.epsilon = 0  # randomness
@@ -96,7 +97,7 @@ class Agent:
 
 def train():
     record = 0
-    agent = Agent()
+    agent = DeepQLearningAgent()
     game = SnakeGameAI()
     while True:
         state_old = agent.get_state(game)

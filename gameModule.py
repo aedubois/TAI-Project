@@ -37,7 +37,7 @@ class SnakeGame:
             [" " for j in range(self.rows)] for i in range(self.columns)
         ]
         self.snake = []
-        self.previous_move = None
+        self.previous_move = RIGHT
         self.next_move = None
         self.food = None
         self.alive = False
@@ -106,7 +106,7 @@ class SnakeGame:
         self.remove_snake()
         self.alive = True
         self.score = 0
-        self.previous_move = None
+        self.previous_move = RIGHT
         self.next_move = None
         self.spawn_snake()
         self.spawn_food()
@@ -239,10 +239,6 @@ class SnakeGame:
         return np.array(state, dtype=int)
 
     def get_direction(self):
-        if self.previous_move not in [RIGHT, LEFT, UP, DOWN]:
-            # default direction when starting
-            return "right"
-
         if self.previous_move == RIGHT:
             return "right"
         if self.previous_move == LEFT:

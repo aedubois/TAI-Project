@@ -70,12 +70,10 @@ def main():
     # agent = Snake(Dna(weights, bias))
 
     # Q-Learning player
-    # agent = SnakeQAgent("69.npy", game)
+    agent = SnakeQAgent("69.npy", game)
 
     # deep Q-Learning player
-    # TODO: now it's just a Q-Learning player,
-    #  but it should be a deep Q-Learning player (use DeepQLearningAgent)
-    agent = SnakeQAgent("69.npy", game)
+    # agent = SnakeQAgent("69.npy", game)
 
     while game.is_running():
         game.next_tick(agent)

@@ -46,6 +46,7 @@ class SnakeGame:
         self.start_time = time.time()
         self.current_time = self.start_time
         self.foodEaten = False
+        self.steps_without_food = 0
 
     def is_running(self):
         return self.run
@@ -112,6 +113,7 @@ class SnakeGame:
         self.spawn_food()
         self.start_time = time.time()
         self.current_time = self.start_time
+        self.steps_without_food = 0
 
     def set_next_move(self, move):
         self.next_move = move
@@ -142,6 +144,8 @@ class SnakeGame:
 
         if self.next_move is not None:
             self.foodEaten = False
+            self.steps_without_food += 1
+
             head = self.snake[0]
             new_pos = (head[0] + self.next_move[0], head[1] + self.next_move[1])
 
@@ -155,12 +159,16 @@ class SnakeGame:
                 if new_pos == self.food:
                     self.score += 1
                     self.foodEaten = True
+                    self.steps_without_food = 0
                     self.spawn_food()
                 else:
                     tail = self.snake.pop()
                     self.grid[tail[0]][tail[1]] = EMPTY_CHAR
                 self.previous_move = self.next_move
                 self.next_move = None
+
+            if self.steps_without_food > 100:
+                self.alive = False
 
             return self.get_state()
 

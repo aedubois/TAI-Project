@@ -1,8 +1,7 @@
 import torch
 import random
-import numpy as np
 from collections import deque
-from game import SnakeGameAI, Direction, Point
+from gameModule import SnakeGame, LEFT, RIGHT, UP, DOWN
 from model import LinearQNet, QTrainer
 
 MAX_MEMORY = 100_000
@@ -19,52 +18,6 @@ class DeepQLearningAgent:
         self.model = LinearQNet(11, 256, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
-    def get_state(self, game):
-        head = game.snake[0]
-        point_l = Point(head.x - 20, head.y)
-        point_r = Point(head.x + 20, head.y)
-        point_u = Point(head.x, head.y - 20)
-        point_d = Point(head.x, head.y + 20)
-
-        dir_l = game.direction == Direction.LEFT
-        dir_r = game.direction == Direction.RIGHT
-        dir_u = game.direction == Direction.UP
-        dir_d = game.direction == Direction.DOWN
-
-        state = [
-            # Danger straight
-            (dir_r and game.is_collision(point_r)) or
-            (dir_l and game.is_collision(point_l)) or
-            (dir_u and game.is_collision(point_u)) or
-            (dir_d and game.is_collision(point_d)),
-
-            # Danger right
-            (dir_u and game.is_collision(point_r)) or
-            (dir_d and game.is_collision(point_l)) or
-            (dir_l and game.is_collision(point_u)) or
-            (dir_r and game.is_collision(point_d)),
-
-            # Danger left
-            (dir_d and game.is_collision(point_r)) or
-            (dir_u and game.is_collision(point_l)) or
-            (dir_r and game.is_collision(point_u)) or
-            (dir_l and game.is_collision(point_d)),
-
-            # Move direction
-            dir_l,
-            dir_r,
-            dir_u,
-            dir_d,
-
-            # Food location
-            game.food.x < game.head.x,  # food left
-            game.food.x > game.head.x,  # food right
-            game.food.y < game.head.y,  # food up
-            game.food.y > game.head.y  # food down
-        ]
-
-        return np.array(state, dtype=int)
-
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))  # popleft if MAX_MEMORY is reached
 
@@ -80,7 +33,7 @@ class DeepQLearningAgent:
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)
 
-    def get_action(self, state):
+    def choose_next_move(self, state):
         self.epsilon = 80 - self.n_games
         final_move = [0, 0, 0]
         if random.randint(0, 200) < self.epsilon:
@@ -94,31 +47,87 @@ class DeepQLearningAgent:
 
         return final_move
 
+    def eat(self):
+        """
+        This function is useless here, it is a placeholder for a function needed in the other
+        algorithm.
+        """
+        pass
+
+    def reset_state(self):
+        """
+        This function is useless here, it is a placeholder for a function needed in the other
+        algorithm.
+        """
+        pass
+
 
 def train():
-    record = 0
     agent = DeepQLearningAgent()
-    game = SnakeGameAI()
+
+    game = TrainingSnakeGame()
+    game.start_run()
+
     while True:
-        state_old = agent.get_state(game)
-        final_move = agent.get_action(state_old)
-
-        reward, done, score = game.play_step(final_move)
-        state_new = agent.get_state(game)
-
+        state_old = game.get_deep_q_state()
+        final_move = agent.choose_next_move(state_old)
+        game.set_next_move(final_move)
+        game.move_snake()
+        state_new = game.get_deep_q_state()
+        reward = game.get_reward()
+        done = not game.is_alive()
         agent.train_short_memory(state_old, final_move, reward, state_new, done)
         agent.remember(state_old, final_move, reward, state_new, done)
 
+        score = game.score
+        best_score = game.best_score
+
         if done:
-            game.reset()
+            game.start_run()
+
             agent.n_games += 1
             agent.train_long_memory()
 
-            if score > record:
-                record = score
-                agent.model.save()
+            # TODO: only save if the score is a new record
+            agent.model.save()
 
-            print('Game', agent.n_games, 'Score', score, 'Record:', record)
+            print('Game', agent.n_games, 'Score', score, 'Record:', best_score)
+
+
+class TrainingSnakeGame(SnakeGame):
+    def __init__(self):
+        super(TrainingSnakeGame, self).__init__()
+
+    def set_next_move(self, move):
+        adapted_move = self.adapt_move(move)
+        super().set_next_move(adapted_move)
+
+    def adapt_move(self, next_move):
+        moves = ["right", "down", "left", "up"]
+        direction = self.get_direction()
+
+        start_point = moves.index(direction)
+
+        if next_move[0] == 1:
+            return self.adapt_dir(direction)
+        if next_move[1] == 1:
+            new_point = (start_point + 1) % 4
+            return self.adapt_dir(moves[new_point])
+        if next_move[2] == 1:
+            new_point = (start_point - 1) % 4
+            return self.adapt_dir(moves[new_point])
+
+    def adapt_dir(self, direction):
+        moves_map = {"right": RIGHT, "down": DOWN, "left": LEFT, "up": UP}
+        return moves_map[direction]
+
+    def get_reward(self):
+        if not self.is_alive():
+            return -10
+        elif self.foodEaten:
+            return 1
+        else:
+            return 0
 
 
 if __name__ == '__main__':

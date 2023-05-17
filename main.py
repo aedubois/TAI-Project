@@ -54,7 +54,7 @@ def main():
     # args = parser.parse_args()
     game = GUISnakeGame()
     game.init_pygame()
-    agent = SnakeQAgent()
+    agent = SnakeQAgent("69.npy", game)
 
     # agent = None
     # if args.player:

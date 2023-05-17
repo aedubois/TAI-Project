@@ -1,5 +1,9 @@
-import pygame, random, time
 from pathlib import Path
+
+import numpy as np
+import pygame
+import random
+import time
 
 TITLE = "snAIke!"
 FPS = 30
@@ -41,7 +45,6 @@ class SnakeGame:
         self.best_score = 0
         self.start_time = time.time()
         self.current_time = self.start_time
-        self.mps = 8
         self.foodEaten = False
 
     def is_running(self):
@@ -49,72 +52,6 @@ class SnakeGame:
 
     def stop_running(self):
         self.run = False
-
-    def speedup(self):
-        if self.mps < 50:
-            self.mps += 1
-        self.score = 0
-        self.best_score = 0
-
-    def slowdown(self):
-        if self.mps > 1:
-            self.mps -= 1
-        self.score = 0
-        self.best_score = 0
-
-    def get_mps(self):
-        return self.mps
-
-    def reset_grid(self):
-        for i in range(20):
-            for j in range(20):
-                self.grid[i][j] = EMPTY_CHAR
-        self.score = 0
-        self.best_score = 0
-
-    def expand_row(self):
-        if self.rows < 100:
-            self.rows += 1
-        self.grid = []
-        for i in range(self.rows):
-            self.grid.append([])
-            for j in range(self.columns):
-                self.grid[i].append(EMPTY_CHAR)
-        self.score = 0
-        self.best_score = 0
-
-    def expand_column(self):
-        if self.columns < 100:
-            self.columns += 1
-        self.grid = []
-        for i in range(self.rows):
-            self.grid.append([])
-            for j in range(self.columns):
-                self.grid[i].append(EMPTY_CHAR)
-        self.score = 0
-        self.best_score = 0
-
-    def shrink_row(self):
-        if self.rows > 1:
-            self.rows -= 1
-        self.grid = []
-        for i in range(self.rows):
-            self.grid.append([])
-            for j in range(self.columns):
-                self.grid[i].append(EMPTY_CHAR)
-        self.score = 0
-        self.best_score = 0
-
-    def shrink_column(self):
-        if self.columns > 1:
-            self.columns -= 1
-        self.grid = []
-        for i in range(self.rows):
-            self.grid.append([])
-            for j in range(self.columns):
-                self.grid[i].append(EMPTY_CHAR)
-        self.score = 0
-        self.best_score = 0
 
     def is_alive(self):
         return self.alive
@@ -175,7 +112,6 @@ class SnakeGame:
         self.spawn_food()
         self.start_time = time.time()
         self.current_time = self.start_time
-        # print("Starting game with C={} and R={}".format(self.columns, self.rows))
 
     def set_next_move(self, move):
         self.next_move = move
@@ -241,18 +177,66 @@ class SnakeGame:
         return gap, vertical_start, horizontal_start, menu_start
 
     def get_q_state(self):
-        """Build state for Q-Learner agent"""
+        """Build state for Q-Learning agent"""
         head_r, head_c = self.snake[0]
-        direction = self.get_direction()
         food_r, food_c = self.food
+
+        direction = self.get_direction()
 
         state = [
             int(direction == "left"), int(direction == "right"), int(direction == "up"), int(direction == "down"),
             int(food_r < head_r), int(food_r > head_r), int(food_c < head_c), int(food_c > head_c),
-            self.is_unsafe(head_r + 1, head_c), self.is_unsafe(head_r - 1, head_c),
-            self.is_unsafe(head_r, head_c + 1), self.is_unsafe(head_r, head_c - 1)]
+            int(self.is_collision((head_r + 1, head_c))), int(self.is_collision((head_r - 1, head_c))),
+            int(self.is_collision((head_r, head_c + 1))), int(self.is_collision((head_r, head_c - 1)))]
 
         return tuple(state)
+
+    def get_deep_q_state(self):
+        head = self.snake[0]
+
+        point_l = (head[0] - 1, head[1])
+        point_r = (head[0] + 1, head[1])
+        point_u = (head[0], head[1] - 1)
+        point_d = (head[0], head[1] + 1)
+
+        dir_l = self.get_direction() == "up"
+        dir_r = self.get_direction() == "down"
+        dir_u = self.get_direction() == "left"
+        dir_d = self.get_direction() == "right"
+
+        state = [
+            # Danger straight
+            (dir_r and self.is_collision(point_r)) or
+            (dir_l and self.is_collision(point_l)) or
+            (dir_u and self.is_collision(point_u)) or
+            (dir_d and self.is_collision(point_d)),
+
+            # Danger right
+            (dir_u and self.is_collision(point_r)) or
+            (dir_d and self.is_collision(point_l)) or
+            (dir_l and self.is_collision(point_u)) or
+            (dir_r and self.is_collision(point_d)),
+
+            # Danger left
+            (dir_d and self.is_collision(point_r)) or
+            (dir_u and self.is_collision(point_l)) or
+            (dir_r and self.is_collision(point_u)) or
+            (dir_l and self.is_collision(point_d)),
+
+            # Move direction
+            dir_l,
+            dir_r,
+            dir_u,
+            dir_d,
+
+            # Food location
+            self.food[0] < head[0],  # food left
+            self.food[0] > head[0],  # food right
+            self.food[1] < head[1],  # food up
+            self.food[1] > head[1]  # food down
+        ]
+
+        return np.array(state, dtype=int)
 
     def get_direction(self):
         if self.previous_move not in [RIGHT, LEFT, UP, DOWN]:
@@ -268,15 +252,6 @@ class SnakeGame:
         if self.previous_move == DOWN:
             return "down"
 
-    def is_unsafe(self, r, c):
-        """
-        Check if the next move is unsafe
-        """
-        if self.is_collision((r, c)):
-            return 1
-        else:
-            return 0
-
 
 class GUISnakeGame(SnakeGame):
     DEFAULT_WIDTH = 900
@@ -287,6 +262,22 @@ class GUISnakeGame(SnakeGame):
     def __init__(self):
         super(GUISnakeGame, self).__init__()
         self.frame = 0
+        self.mps = 8
+
+    def speedup(self):
+        if self.mps < 50:
+            self.mps += 1
+        self.score = 0
+        self.best_score = 0
+
+    def slowdown(self):
+        if self.mps > 1:
+            self.mps -= 1
+        self.score = 0
+        self.best_score = 0
+
+    def get_mps(self):
+        return self.mps
 
     def next_tick(self, learning_agent=None):
         self.process_event(learning_agent)
@@ -301,6 +292,35 @@ class GUISnakeGame(SnakeGame):
         self.draw()
         self.clock.tick(FPS)
         self.frame += 1
+
+    def expand_row(self):
+        if self.rows < 100:
+            self.rows += 1
+        self.rebuild_grid()
+
+    def expand_column(self):
+        if self.columns < 100:
+            self.columns += 1
+        self.rebuild_grid()
+
+    def shrink_row(self):
+        if self.rows > 1:
+            self.rows -= 1
+        self.rebuild_grid()
+
+    def shrink_column(self):
+        if self.columns > 1:
+            self.columns -= 1
+        self.rebuild_grid()
+
+    def rebuild_grid(self):
+        self.grid = []
+        for i in range(self.rows):
+            self.grid.append([])
+            for j in range(self.columns):
+                self.grid[i].append(EMPTY_CHAR)
+        self.score = 0
+        self.best_score = 0
 
     def process_event(self, learning_agent=None):
         # triggering an event
@@ -326,7 +346,7 @@ class GUISnakeGame(SnakeGame):
 
                     # modify grid
                     elif event.key == pygame.K_r:
-                        self.reset_grid()
+                        self.rebuild_grid()
                     elif event.key == pygame.K_o:
                         self.expand_row()
                     elif event.key == pygame.K_p:

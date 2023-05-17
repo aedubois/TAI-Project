@@ -4,6 +4,7 @@ from genetic_snake import Snake
 from Astar_snake import IA_Astar
 from dna import Dna
 from QLearningAgent import SnakeQAgent
+from DeepQlearningAgent import DeepQLearningAgent
 import pickle
 from pathlib import Path
 import sys
@@ -70,7 +71,7 @@ def main():
     # agent = Snake(Dna(weights, bias))
 
     # Q-Learning player
-    agent = SnakeQAgent("69.npy", game)
+    agent = DeepQLearningAgent("stateDict61.pth", game)
 
     # deep Q-Learning player
     # agent = SnakeQAgent("69.npy", game)

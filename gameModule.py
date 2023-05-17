@@ -31,8 +31,8 @@ CLOSED_CHAR = "C"
 class SnakeGame:
     def __init__(self):
         self.run = True
-        self.rows = 20
-        self.columns = 20
+        self.rows = 10
+        self.columns = 10
         self.grid = [
             [" " for j in range(self.rows)] for i in range(self.columns)
         ]
@@ -167,8 +167,10 @@ class SnakeGame:
                 self.previous_move = self.next_move
                 self.next_move = None
 
-            if self.steps_without_food > 100:
+            if self.steps_without_food > 75:
                 self.alive = False
+                if self.score > self.best_score:
+                    self.best_score = self.score
 
             return self.get_state()
 
@@ -255,7 +257,32 @@ class SnakeGame:
             return "up"
         if self.previous_move == DOWN:
             return "down"
+    def adapt_move(self, next_move):
+        moves = ["right", "down", "left", "up"]
+        direction = self.get_direction()
 
+        start_point = moves.index(direction)
+
+        if next_move[0] == 1:
+            return self.adapt_dir(direction)
+        if next_move[1] == 1:
+            new_point = (start_point + 1) % 4
+            return self.adapt_dir(moves[new_point])
+        if next_move[2] == 1:
+            new_point = (start_point - 1) % 4
+            return self.adapt_dir(moves[new_point])
+
+    def adapt_dir(self, direction):
+        moves_map = {"right": RIGHT, "down": DOWN, "left": LEFT, "up": UP}
+        return moves_map[direction]
+
+    def get_reward(self):
+        if not self.is_alive():
+            return -10
+        elif self.foodEaten:
+            return 1
+        else:
+            return 0
 
 class GUISnakeGame(SnakeGame):
     DEFAULT_WIDTH = 900
@@ -326,6 +353,13 @@ class GUISnakeGame(SnakeGame):
         self.score = 0
         self.best_score = 0
 
+    def add_wall(self, pos):
+        i, j = self.get_coord(self.screen, pos)
+        if 0 <= i < self.rows and 0 <= j < self.columns:
+            self.grid[i][j] = WALL_CHAR
+        self.score = 0
+        self.best_score = 0
+
     def process_event(self, learning_agent=None):
         # triggering an event
         for event in pygame.event.get():
@@ -387,7 +421,7 @@ class GUISnakeGame(SnakeGame):
 
         if self.is_alive() and learning_agent is not None:
             self.set_next_move(
-                learning_agent.choose_next_move(self.get_state())
+                learning_agent.choose_next_move(self.get_state)
             )
 
     def init_pygame(self):
@@ -426,12 +460,7 @@ class GUISnakeGame(SnakeGame):
         j = int((x - horizontal_start) // gap)
         return i, j
 
-    def add_wall(self, pos):
-        i, j = self.get_coord(self.screen, pos)
-        if 0 <= i < self.rows and 0 <= j < self.columns:
-            self.grid[i][j] = WALL_CHAR
-        self.score = 0
-        self.best_score = 0
+
 
     def remove(self, pos):
         i, j = self.get_coord(self.screen, pos)

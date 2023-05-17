@@ -1,42 +1,68 @@
-import os
-import numpy as np
-import random
 import torch
-from DeepQplot import deep_plot
-from Model import Qnet, QTrainer
-from gameModule import SnakeGame, RIGHT, LEFT, UP, DOWN
+import random
+import numpy as np
 from collections import deque
-
-MOVES = [LEFT, RIGHT, UP, DOWN]
-DMOVES = [[1,0,0],[0,1,0],[0,0,1]]
+from game import SnakeGameAI, Direction, Point
+from model import LinearQNet, QTrainer
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
-class DeepQlearningAgent:
-    def __init__(self, q_table_file_name="None", game=None):
 
-        self.current_game = game
-        self.discount_rate = 0.95
-        self.learning_rate = 0.01
-        self.eps = 1.0
-        self.eps_discount = 0.992
-        self.min_eps = 0.001
-        self.num_episodes = 10_000
-        self.moves = [LEFT, RIGHT, UP, DOWN]
+class Agent:
+    def __init__(self):
+        self.n_games = 0
+        self.epsilon = 0  # randomness
+        self.gamma = 0.9  # discount rate
+        self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
+        self.model = LinearQNet(11, 256, 3)
+        self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
-        self.model = Qnet(12, 256, 3)
-        self.trainer = QTrainer(self.model, lr=LR, gamma=self.discount_rate)
+    def get_state(self, game):
+        head = game.snake[0]
+        point_l = Point(head.x - 20, head.y)
+        point_r = Point(head.x + 20, head.y)
+        point_u = Point(head.x, head.y - 20)
+        point_d = Point(head.x, head.y + 20)
 
-        self.memory = deque(maxlen=MAX_MEMORY)
+        dir_l = game.direction == Direction.LEFT
+        dir_r = game.direction == Direction.RIGHT
+        dir_u = game.direction == Direction.UP
+        dir_d = game.direction == Direction.DOWN
 
-    def choose_next_move(self, state):
-        final_move = [0, 0, 0]
-        state0 = torch.tensor(state, dtype=torch.float)
-        prediction = self.model(state0)
-        move = torch.argmax(prediction).item()
-        final_move[move] = 1
-        return final_move
+        state = [
+            # Danger straight
+            (dir_r and game.is_collision(point_r)) or
+            (dir_l and game.is_collision(point_l)) or
+            (dir_u and game.is_collision(point_u)) or
+            (dir_d and game.is_collision(point_d)),
+
+            # Danger right
+            (dir_u and game.is_collision(point_r)) or
+            (dir_d and game.is_collision(point_l)) or
+            (dir_l and game.is_collision(point_u)) or
+            (dir_r and game.is_collision(point_d)),
+
+            # Danger left
+            (dir_d and game.is_collision(point_r)) or
+            (dir_u and game.is_collision(point_l)) or
+            (dir_r and game.is_collision(point_u)) or
+            (dir_l and game.is_collision(point_d)),
+
+            # Move direction
+            dir_l,
+            dir_r,
+            dir_u,
+            dir_d,
+
+            # Food location
+            game.food.x < game.head.x,  # food left
+            game.food.x > game.head.x,  # food right
+            game.food.y < game.head.y,  # food up
+            game.food.y > game.head.y  # food down
+        ]
+
+        return np.array(state, dtype=int)
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))  # popleft if MAX_MEMORY is reached
@@ -49,117 +75,50 @@ class DeepQlearningAgent:
 
         states, actions, rewards, next_states, dones = zip(*mini_sample)
         self.trainer.train_step(states, actions, rewards, next_states, dones)
-        # for state, action, reward, nexrt_state, done in mini_sample:
-        #    self.trainer.train_step(state, action, reward, next_state, done)
 
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)
 
-    def train(self):
-        highest_score = 0
-        total_score = 0
-        plot_scores = []
-        plot_mean_scores = []
-
-        for i in range(1, self.num_episodes + 1):
-            self.current_game = TrainingSnakeGame()
-            self.current_game.start_run()
-
-            self.current_game.train_one_game(self)
-
-            if self.current_game.score > highest_score:
-                highest_score = self.current_game.score
-                self.model.save()
-
-            print(f"Episode {i} finished. Highest_Score: {highest_score}. Current_Score: {self.current_game.score}", "current espilon: ", self.eps)
-
-            plot_scores.append(self.current_game.score)
-            total_score += self.current_game.score
-            mean_score = total_score / self.num_episodes + 1
-            plot_mean_scores.append(mean_score)
-        deep_plot(plot_scores, plot_mean_scores, highest_score)
-
-
-
-    def eat(self):
-        """
-        This function is useless here, it is a placeholder for a function needed in the other
-        algorithm.
-        """
-        pass
-
-    def reset_state(self):
-        """
-        This function is useless here, it is a placeholder for a function needed in the other
-        algorithm.
-        """
-        pass
-
-
-
-class TrainingSnakeGame(SnakeGame):
-    def __init__(self):
-        super(TrainingSnakeGame, self).__init__()
-
-    def train_one_game(self, agent):
-        agent.eps = max(agent.eps * agent.eps_discount, agent.min_eps)
-        while self.is_alive():
-            self.next_tick(agent)
-
-        agent.train_long_memory()
-    def next_tick(self, agent):
-        current_state = self.get_q_state()
-        next_move = self.get_next_move(current_state, agent) # [1,0,0]
-
-        next_move = self.convert_move(next_move)
-
-        self.set_next_move(next_move)
-        self.move_snake()
-
-        new_state = self.get_q_state()
-        reward = self.get_reward()
-
-        # train short memory
-        agent.train_short_memory(current_state, next_move, reward, new_state, self.is_alive())
-
-        agent.remember(current_state, next_move, reward, new_state, self.is_alive())
-
-    def convert_move(self,next_move):
-        moves = ["right", "down", "left", "up"]
-        direct = self.get_direction()
-        start_point = moves.index(direct)
-        if next_move[0] == 1:
-            return self.convert_dir(direct)
-        if next_move[1] == 1:
-            new_point = (start_point+1)%4
-            return self.convert_dir(moves[new_point])
-        if next_move[2] == 1:
-            new_point = (start_point-1)%4
-            return self.convert_dir(moves[new_point])
-
-    def convert_dir(self,direction):
-        if direction == "left":
-            return LEFT
-        elif direction == "right":
-            return RIGHT
-        elif direction == "up":
-            return UP
-        elif direction == "down":
-            return DOWN
-
-    # epsilon-greedy action choice
-    def get_next_move(self, state, agent):
-        if random.random() < agent.eps:
-            return DMOVES[random.choice([0, 1, 2])]
+    def get_action(self, state):
+        self.epsilon = 80 - self.n_games
+        final_move = [0, 0, 0]
+        if random.randint(0, 200) < self.epsilon:
+            move = random.randint(0, 2)
+            final_move[move] = 1
         else:
-            return agent.choose_next_move(state)
+            state0 = torch.tensor(state, dtype=torch.float)
+            prediction = self.model(state0)
+            move = torch.argmax(prediction).item()
+            final_move[move] = 1
 
-    # TODO: consider more cases like the possibility of a near body collision,
-    #  the age of the agent, and such
-    def get_reward(self):
-        if self.foodEaten:
-            return 1
-        if not self.is_alive():
-            return -10
+        return final_move
 
-        return -0.1
+
+def train():
+    record = 0
+    agent = Agent()
+    game = SnakeGameAI()
+    while True:
+        state_old = agent.get_state(game)
+        final_move = agent.get_action(state_old)
+
+        reward, done, score = game.play_step(final_move)
+        state_new = agent.get_state(game)
+
+        agent.train_short_memory(state_old, final_move, reward, state_new, done)
+        agent.remember(state_old, final_move, reward, state_new, done)
+
+        if done:
+            game.reset()
+            agent.n_games += 1
+            agent.train_long_memory()
+
+            if score > record:
+                record = score
+                agent.model.save()
+
+            print('Game', agent.n_games, 'Score', score, 'Record:', record)
+
+
+if __name__ == '__main__':
+    train()

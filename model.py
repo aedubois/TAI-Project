@@ -4,7 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import os
 
-class Qnet(nn.Module):
+class LinearQNet(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super().__init__()
         self.linear1 = nn.Linear(input_size, hidden_size)
@@ -66,3 +66,5 @@ class QTrainer:
         loss.backward()
 
         self.optimizer.step()
+
+

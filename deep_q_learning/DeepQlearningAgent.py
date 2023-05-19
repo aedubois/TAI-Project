@@ -14,7 +14,7 @@ LR = 0.001
 
 
 def get_models_dir():
-    return os.path.join(os.path.dirname(__file__), "model/")
+    return os.path.join(os.path.dirname(__file__), "models/")
 
 
 def get_figures_dir():
@@ -94,7 +94,7 @@ class DeepQLearningAgent:
         pass
 
 
-NUM_TRAINING_EPISODES = 2_000
+NUM_TRAINING_EPISODES = 1_000
 
 
 def train():
@@ -130,8 +130,8 @@ def train():
             agent.n_games += 1
             agent.train_long_memory()
 
-            if score > 30:
-                agent.model.save(get_models_dir(), "stateDict" + str(score) + ".pth")
+            if score > 50:
+                agent.model.save(get_models_dir(), "state_dict" + str(score) + ".pth")
 
             print('Game', agent.n_games, 'Score', score, 'Record:', best_score)
 

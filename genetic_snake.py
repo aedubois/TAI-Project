@@ -107,7 +107,7 @@ class Snake:
         returns a list of all elements in a straight line in a certain direction
         from the head of the snake
         """
-        grid, score, alive, snake = state
+        grid, score, alive, snake, _, _, _, _ = state
         res = [0, 0, 0]  # food, snake, wall
         current = (snake[0][0] + direction[0], snake[0][1] + direction[1])
         distance = 1  # Distance between the snake head and current position

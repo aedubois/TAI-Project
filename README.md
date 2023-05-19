@@ -32,6 +32,8 @@ poetry install
 
 ## Utilisation
 
+### Joueur humain
+
 Vous pouvez ensuite lancer le jeu dans l'environnement virtuel nouvellement
 crée, en utilsant la commande:
 
@@ -43,6 +45,10 @@ Cette commande lance le jeu en mode "player" ce qui vous permet de jouer au
 snake; il suffit alors d'appuyer sur la barre espace et d'utiliser les touches
 directionelles du clavier.
 
+### IA
+
+
+#### A\*
 Pour faire jouer une IA, par exemple l'IA de recherche A\*, il suffit de
 lancerle jeu comme ceci:
 
@@ -54,6 +60,8 @@ l'option `--ai` indique au jeu de se lancer en mode IA, ensuite la 2ème option
 indique le type d'IA, cela peut être `-a` pour A\*, `-s` pour le chemin en forme
 de S, `-g` pour le réseau de neurone entrainé pour algorithme génétique.
 
+
+#### Algorithme génétique
 Cette dernière option (`-g`) requiert l'ajout d'un argument à la commande pour indiquer
 le modèle de réseau de neurone à utiliser, par exemple:
 
@@ -64,7 +72,19 @@ poetry run python main.py --ai -g weights/159.snake
 Quelques exemples de réseau de neurones pré-entrainés sont disponibles dans
 le dossier `weights`.
 
-En résumé:
+#### Q-Learning
+```bash
+poetry run python main.py --ai -q 66.npy 
+```
+
+Pour lancer le jeu avec l'algorithme Q-Learning, il faut utiliser l'option `-q` et passer en argument le nom du fichier de la qtable à utiliser.
+
+#### Deep Q-Learning
+```bash
+poetry run python main.py --ai -d 58.pth 
+```
+
+#### En résumé :
 
 ```
 usage: main.py [-h] [-p | -x] [-g GENETIC | -s | -a]
@@ -79,11 +99,15 @@ optional arguments:
                         Genetic algorithm: plays a move based of trained neural network, please select weight file
   -s, --sshaped         S-Shaped algorithm: browses the whole grid each time in an 'S' shape. Only works if height of grid is even.
   -a, --astar           A* algorithm: classical A* algorithm, with Manhattan distance as heuristic
+  
+  -q, --qlearning       Q-Learning algorithm: plays a move based on a Q-Learning algorithm, pass the name of the qtable file as argument
+  -d, --deepqlearning   Deep Q-Learning algorithm: plays a move based on a Deep Q-Learning algorithm, pass the name of the model file as argument
 
 ```
 
 ### Entrainement
 
+#### Algorithme génétique
 Pour entrainer un nouveau réseau de neurone pour le snake, il faut lancer le
 programme `train.py`, par exemple:
 
@@ -122,6 +146,22 @@ optional arguments:
 
 ```
 
-![snake screen](../assets/img/snake.png)
+#### Q-Learning
+Pour entrainer un nouveau réseau de neurone pour le snake, il faut lancer le fichier `QLearningTrain.py`, par exemple:
+
+```bash
+poetry run python QLearningTrainer.py 
+```
+
+Les meilleurs `q_tables` seront stockés par score dans le dossier `qtables`, ainsi, par exemple, le fichier `66.npy` contient une qtable qui a reussit à atteindre un score de 66.
+
+#### Deep Q-Learning
+Pour entrainer un nouveau réseau de neurone pour le snake, il faut lancer le fichier `DeepQLearningAgent.py`, par exemple:
+
+```bash
+poetry run python DeepQLearningAgent.py 
+```
+
+Les meilleurs modèles seront stockés par score dans le dossier `models`, ainsi, par exemple, le fichier `58.pth` contient un modèle qui a reussit à atteindre un score de 58.
 
 [ia-gh]: https://github.com/iridia-ulb/AI-book

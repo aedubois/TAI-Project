@@ -2,12 +2,12 @@ import argparse
 import pickle
 from pathlib import Path
 
-from a_star.Astar_snake import IA_Astar
-from deep_q_learning.DeepQlearningAgent import DeepQLearningAgent
+from Astar_snake import IA_Astar
+from DeepQlearningAgent import DeepQLearningAgent
 from gameModule import GUISnakeGame
-from genetic.dna import Dna
-from genetic.genetic_snake import Snake
-from q_learning.QLearningAgent import SnakeQAgent
+from dna import Dna
+from genetic_snake import Snake
+from QLearningAgent import SnakeQAgent
 
 
 def main():
@@ -46,13 +46,22 @@ def main():
         help="A* algorithm: classical A* algorithm, with "
              "Manhattan distance as heuristic",
     )
+    group_algorithm.add_argument(
+        "-q",
+        "--qlearning",
+        help="Q-Learning algorithm: plays a move based of trained neural network, please select weight file",
+    )
+    group_algorithm.add_argument(
+        "-d",
+        "--deepqlearning",
+        help="Deep Q-Learning algorithm: plays a move based of trained neural network, please select weight file",
+    )
+
     args = parser.parse_args()
 
     game = GUISnakeGame()
     game.init_pygame()
-
-    q_learning_player = False
-    deep_q_learning_player = False
+    agent = None
 
     if args.player:
         agent = None
@@ -63,14 +72,13 @@ def main():
             with open(Path(args.genetic), "rb") as f:
                 weights, bias = pickle.load(f)
             agent = Snake(Dna(weights, bias))
-        elif q_learning_player:
-            agent = SnakeQAgent("73.npy")
-        elif deep_q_learning_player:
-            agent = DeepQLearningAgent("stateDict55.pth")
+        elif args.qlearning:
+            agent = SnakeQAgent(args.qlearning)
+        elif args.deepqlearning:
+            agent = DeepQLearningAgent(args.deepqlearning)
 
     while game.is_running():
         game.next_tick(agent)
-
     game.cleanup_pygame()
 
 

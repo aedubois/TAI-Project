@@ -4,7 +4,7 @@ from collections import deque
 
 import torch
 
-from deep_q_learning.model import LinearQNet, QTrainer
+from model import LinearQNet, QTrainer
 from gameModule import SnakeGame, is_collision, RIGHT, DOWN, LEFT, UP
 from helpers import plot
 
@@ -14,11 +14,11 @@ LR = 0.001
 
 
 def get_models_dir():
-    return os.path.join(os.path.dirname(__file__), "models/")
+    return os.path.join(os.path.dirname(__file__), "deep_q_learning_models/")
 
 
 def get_figures_dir():
-    return os.path.join(os.path.dirname(__file__), "figures/")
+    return os.path.join(os.path.dirname(__file__), "deep_q_learning_figures/")
 
 
 def load_model(model_file_name="None"):
@@ -131,7 +131,7 @@ def train():
             agent.train_long_memory()
 
             if score > 50:
-                agent.model.save(get_models_dir(), "state_dict" + str(score) + ".pth")
+                agent.model.save(get_models_dir(), str(score) + ".pth")
 
             print('Game', agent.n_games, 'Score', score, 'Record:', best_score)
 

@@ -10,11 +10,11 @@ MOVES = [LEFT, RIGHT, UP, DOWN]
 
 
 def get_q_tables_dir():
-    return os.path.join(os.path.dirname(__file__), "q_tables/")
+    return os.path.join(os.path.dirname(__file__), "q_learning_q_tables/")
 
 
 def get_figures_dir():
-    return os.path.join(os.path.dirname(__file__), "figures/")
+    return os.path.join(os.path.dirname(__file__), "q_learning_figures/")
 
 
 def get_q_table(file_name):

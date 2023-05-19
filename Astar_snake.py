@@ -70,7 +70,7 @@ class IA_Astar:
         :return: The move chosen by the algorithm
         """
 
-        grid, score, alive, snake = state
+        grid, score, alive, snake, _, _, _, _ = state
         head = snake[0]
 
         if self.args.astar and self.best_path == []:
@@ -132,7 +132,7 @@ class IA_Astar:
         :param interactive: Display the execution of the A* algorithm
         :return: The path to the goal
         """
-        grid, score, alive, snake = state
+        grid, score, alive, snake, _, _, _, _ = state
         head = snake[0]
         closed_list = set()
         open_list = []

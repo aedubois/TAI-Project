@@ -1,6 +1,6 @@
+import os
 import random
 import time
-from pathlib import Path
 
 import pygame
 
@@ -162,7 +162,7 @@ class SnakeGame:
                 self.previous_move = self.next_move
                 self.next_move = None
 
-            if self.steps_without_food > 75:
+            if self.steps_without_food > 150:
                 self.alive = False
                 if self.score > self.best_score:
                     self.best_score = self.score
@@ -190,6 +190,9 @@ class GUISnakeGame(SnakeGame):
 
     def __init__(self):
         super(GUISnakeGame, self).__init__()
+        self.screen = None
+        self.normal_font = None
+        self.title_font = None
         self.frame = 0
         self.mps = 8
 
@@ -332,11 +335,11 @@ class GUISnakeGame(SnakeGame):
             height / GUISnakeGame.DEFAULT_HEIGHT,
         )
         self.title_font = pygame.font.Font(
-            Path("Fonts") / Path("Mario-Kart-DS.ttf"),
+            os.path.join(os.path.dirname(__file__), "Fonts/Mario-Kart-DS.ttf"),
             round(GUISnakeGame.DEFAULT_TITLE_FONT_SIZE * ratio),
         )
         self.normal_font = pygame.font.Font(
-            Path("Fonts") / Path("Fipps-Regular.otf"),
+            os.path.join(os.path.dirname(__file__), "Fonts/Fipps-Regular.otf"),
             round(GUISnakeGame.DEFAULT_FONT_SIZE * ratio),
         )
 

@@ -1,13 +1,7 @@
 import argparse
+
+from deep_q_learning.DeepQlearningAgent import DeepQLearningAgent
 from gameModule import GUISnakeGame
-from genetic_snake import Snake
-from Astar_snake import IA_Astar
-from dna import Dna
-from QLearningAgent import SnakeQAgent
-from DeepQlearningAgent import DeepQLearningAgent
-import pickle
-from pathlib import Path
-import sys
 
 
 def main():
@@ -36,15 +30,15 @@ def main():
         "--sshaped",
         action="store_true",
         help="S-Shaped algorithm: browses the whole "
-        "grid each time in an 'S' shape. Only "
-        "works if height of grid is even.",
+             "grid each time in an 'S' shape. Only "
+             "works if height of grid is even.",
     )
     group_algorithm.add_argument(
         "-a",
         "--astar",
         action="store_true",
         help="A* algorithm: classical A* algorithm, with "
-        "Manhattan distance as heuristic",
+             "Manhattan distance as heuristic",
     )
     group_algorithm.add_argument(
         "-q",
@@ -71,10 +65,10 @@ def main():
     # agent = Snake(Dna(weights, bias))
 
     # Q-Learning player
-    agent = DeepQLearningAgent("stateDict61.pth", game)
+    agent = DeepQLearningAgent("stateDict55.pth")
 
     # deep Q-Learning player
-    # agent = SnakeQAgent("69.npy", game)
+    # agent = SnakeQAgent("73.npy")
 
     while game.is_running():
         game.next_tick(agent)

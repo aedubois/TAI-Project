@@ -1,9 +1,8 @@
-from pathlib import Path
-
-import numpy as np
-import pygame
 import random
 import time
+from pathlib import Path
+
+import pygame
 
 TITLE = "snAIke!"
 FPS = 30
@@ -31,8 +30,8 @@ CLOSED_CHAR = "C"
 class SnakeGame:
     def __init__(self):
         self.run = True
-        self.rows = 10
-        self.columns = 10
+        self.rows = 20
+        self.columns = 20
         self.grid = [
             [" " for j in range(self.rows)] for i in range(self.columns)
         ]
@@ -45,7 +44,7 @@ class SnakeGame:
         self.best_score = 0
         self.start_time = time.time()
         self.current_time = self.start_time
-        self.foodEaten = False
+        self.food_eaten = False
         self.steps_without_food = 0
 
     def is_running(self):
@@ -119,11 +118,7 @@ class SnakeGame:
         self.next_move = move
 
     def is_collision(self, pos):
-        return not (
-                0 <= pos[0] < self.rows
-                and 0 <= pos[1] < self.columns
-                and self.grid[pos[0]][pos[1]] in [EMPTY_CHAR, FOOD_CHAR]
-        )
+        return is_collision(pos, self.rows, self.columns, self.grid)
 
     def is_next_move_invalid(self):
         if self.previous_move is not None:
@@ -137,13 +132,13 @@ class SnakeGame:
             self.alive = False
             if self.score > self.best_score:
                 self.best_score = self.score
-            return self.get_state()
+            return
 
         if self.next_move is None or self.is_next_move_invalid():
             self.next_move = self.previous_move
 
         if self.next_move is not None:
-            self.foodEaten = False
+            self.food_eaten = False
             self.steps_without_food += 1
 
             head = self.snake[0]
@@ -158,7 +153,7 @@ class SnakeGame:
                 self.grid[new_pos[0]][new_pos[1]] = SNAKE_CHAR
                 if new_pos == self.food:
                     self.score += 1
-                    self.foodEaten = True
+                    self.food_eaten = True
                     self.steps_without_food = 0
                     self.spawn_food()
                 else:
@@ -172,81 +167,9 @@ class SnakeGame:
                 if self.score > self.best_score:
                     self.best_score = self.score
 
-            return self.get_state()
-
     def get_state(self):
-        return self.grid, self.score, self.alive, self.snake
-
-    def get_grid_base(self, width, height):
-        menu_start = width * 2 / 3
-        vertical_gap = (height - 1) // self.rows
-        horizontal_gap = (menu_start - 1) // self.columns
-        gap = min(horizontal_gap, vertical_gap)
-        vertical_start = (height - self.rows * gap) // 2
-        horizontal_start = (menu_start - self.columns * gap) // 2
-        return gap, vertical_start, horizontal_start, menu_start
-
-    def get_q_state(self):
-        """Build state for Q-Learning agent"""
-        head_r, head_c = self.snake[0]
-        food_r, food_c = self.food
-
-        direction = self.get_direction()
-
-        state = [
-            int(direction == "left"), int(direction == "right"), int(direction == "up"), int(direction == "down"),
-            int(food_r < head_r), int(food_r > head_r), int(food_c < head_c), int(food_c > head_c),
-            int(self.is_collision((head_r + 1, head_c))), int(self.is_collision((head_r - 1, head_c))),
-            int(self.is_collision((head_r, head_c + 1))), int(self.is_collision((head_r, head_c - 1)))]
-
-        return tuple(state)
-
-    def get_deep_q_state(self):
-        head = self.snake[0]
-
-        point_l = (head[0] - 1, head[1])
-        point_r = (head[0] + 1, head[1])
-        point_u = (head[0], head[1] - 1)
-        point_d = (head[0], head[1] + 1)
-
-        dir_l = self.get_direction() == "up"
-        dir_r = self.get_direction() == "down"
-        dir_u = self.get_direction() == "left"
-        dir_d = self.get_direction() == "right"
-
-        state = [
-            # Danger straight
-            (dir_r and self.is_collision(point_r)) or
-            (dir_l and self.is_collision(point_l)) or
-            (dir_u and self.is_collision(point_u)) or
-            (dir_d and self.is_collision(point_d)),
-
-            # Danger right
-            (dir_u and self.is_collision(point_r)) or
-            (dir_d and self.is_collision(point_l)) or
-            (dir_l and self.is_collision(point_u)) or
-            (dir_r and self.is_collision(point_d)),
-
-            # Danger left
-            (dir_d and self.is_collision(point_r)) or
-            (dir_u and self.is_collision(point_l)) or
-            (dir_r and self.is_collision(point_u)) or
-            (dir_l and self.is_collision(point_d)),
-
-            # Move direction
-            dir_l,
-            dir_r,
-            dir_u,
-            dir_d,
-
-            # Food location
-            self.food[0] < head[0],  # food left
-            self.food[0] > head[0],  # food right
-            self.food[1] < head[1],  # food up
-            self.food[1] > head[1]  # food down
-        ]
-
-        return np.array(state, dtype=int)
+        return self.grid, self.score, self.alive, self.snake, self.food, self.get_direction(), \
+            self.rows, self.columns
 
     def get_direction(self):
         if self.previous_move == RIGHT:
@@ -257,32 +180,7 @@ class SnakeGame:
             return "up"
         if self.previous_move == DOWN:
             return "down"
-    def adapt_move(self, next_move):
-        moves = ["right", "down", "left", "up"]
-        direction = self.get_direction()
 
-        start_point = moves.index(direction)
-
-        if next_move[0] == 1:
-            return self.adapt_dir(direction)
-        if next_move[1] == 1:
-            new_point = (start_point + 1) % 4
-            return self.adapt_dir(moves[new_point])
-        if next_move[2] == 1:
-            new_point = (start_point - 1) % 4
-            return self.adapt_dir(moves[new_point])
-
-    def adapt_dir(self, direction):
-        moves_map = {"right": RIGHT, "down": DOWN, "left": LEFT, "up": UP}
-        return moves_map[direction]
-
-    def get_reward(self):
-        if not self.is_alive():
-            return -10
-        elif self.foodEaten:
-            return 1
-        else:
-            return 0
 
 class GUISnakeGame(SnakeGame):
     DEFAULT_WIDTH = 900
@@ -316,7 +214,7 @@ class GUISnakeGame(SnakeGame):
                 self.frame / FPS >= 1 / self.get_mps() or learning_agent is not None
         ):
             self.move_snake()
-            if self.foodEaten and learning_agent:
+            if self.food_eaten and learning_agent:
                 learning_agent.eat()
             self.frame = 0
         # drawing on screen
@@ -350,13 +248,6 @@ class GUISnakeGame(SnakeGame):
             self.grid.append([])
             for j in range(self.columns):
                 self.grid[i].append(EMPTY_CHAR)
-        self.score = 0
-        self.best_score = 0
-
-    def add_wall(self, pos):
-        i, j = self.get_coord(self.screen, pos)
-        if 0 <= i < self.rows and 0 <= j < self.columns:
-            self.grid[i][j] = WALL_CHAR
         self.score = 0
         self.best_score = 0
 
@@ -420,9 +311,7 @@ class GUISnakeGame(SnakeGame):
                     self.remove(pos)
 
         if self.is_alive() and learning_agent is not None:
-            self.set_next_move(
-                learning_agent.choose_next_move(self.get_state)
-            )
+            self.set_next_move(learning_agent.choose_next_move(self.get_state()))
 
     def init_pygame(self):
         pygame.init()
@@ -451,6 +340,15 @@ class GUISnakeGame(SnakeGame):
             round(GUISnakeGame.DEFAULT_FONT_SIZE * ratio),
         )
 
+    def get_grid_base(self, width, height):
+        menu_start = width * 2 / 3
+        vertical_gap = (height - 1) // self.rows
+        horizontal_gap = (menu_start - 1) // self.columns
+        gap = min(horizontal_gap, vertical_gap)
+        vertical_start = (height - self.rows * gap) // 2
+        horizontal_start = (menu_start - self.columns * gap) // 2
+        return gap, vertical_start, horizontal_start, menu_start
+
     def get_coord(self, screen, pos):
         gap, vertical_start, horizontal_start, menu_start = self.get_grid_base(
             screen.get_width(), screen.get_height()
@@ -460,14 +358,18 @@ class GUISnakeGame(SnakeGame):
         j = int((x - horizontal_start) // gap)
         return i, j
 
-
+    def add_wall(self, pos):
+        char = WALL_CHAR
+        self.set_cell(char, pos)
 
     def remove(self, pos):
+        char = EMPTY_CHAR
+        self.set_cell(char, pos)
+
+    def set_cell(self, char, pos):
         i, j = self.get_coord(self.screen, pos)
         if 0 <= i < self.rows and 0 <= j < self.columns:
-            self.grid[i][j] = EMPTY_CHAR
-        self.score = 0
-        self.best_score = 0
+            self.grid[i][j] = char
 
     def draw_cells(self, screen, gap, vertical_start, horizontal_start):
         for i in range(self.rows):
@@ -624,3 +526,11 @@ def display_state_console20x20(state):
         print(" |" + "-+" * 20)
         print(chr(c) + "|" + "|".join(line[:20]))
         c += 1
+
+
+def is_collision(pos, rows, columns, grid):
+    return not (
+            0 <= pos[0] < rows
+            and 0 <= pos[1] < columns
+            and grid[pos[0]][pos[1]] in [EMPTY_CHAR, FOOD_CHAR]
+    )

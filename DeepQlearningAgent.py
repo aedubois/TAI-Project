@@ -101,48 +101,43 @@ def train():
     game = SnakeGame()
     agent = DeepQLearningAgent("None")
 
-    game.start_run()
     total_score = 0
     plot_scores = []
     plot_mean_scores = []
-    while True:
-        deep_q_state_old = get_deep_q_state(game.get_state())
-        final_move = agent.train_next_move(deep_q_state_old)
 
-        adapted_move = adapt_move(final_move, game.get_direction())
-        game.set_next_move(adapted_move)
+    while agent.n_games < NUM_TRAINING_EPISODES:
+        game.start_run()
 
-        game.move_snake()
-        deep_q_state_new = get_deep_q_state(game.get_state())
-        reward = get_reward(game.is_alive(), game.food_eaten)
+        while game.is_alive():
+            deep_q_state_old = get_deep_q_state(game.get_state())
+            final_move = agent.train_next_move(deep_q_state_old)
 
-        done = not game.is_alive()
+            adapted_move = adapt_move(final_move, game.get_direction())
+            game.set_next_move(adapted_move)
 
-        agent.train_short_memory(deep_q_state_old, final_move, reward, deep_q_state_new, done)
-        agent.remember(deep_q_state_old, final_move, reward, deep_q_state_new, done)
+            game.move_snake()
+            deep_q_state_new = get_deep_q_state(game.get_state())
+            reward = get_reward(game.is_alive(), game.food_eaten)
 
-        score = game.score
-        best_score = game.best_score
+            done = not game.is_alive()
 
-        if done:
-            game.start_run()
+            agent.train_short_memory(deep_q_state_old, final_move, reward, deep_q_state_new, done)
+            agent.remember(deep_q_state_old, final_move, reward, deep_q_state_new, done)
 
-            agent.n_games += 1
-            agent.train_long_memory()
+        agent.n_games += 1
+        agent.train_long_memory()
 
-            if score > 50:
-                agent.model.save(get_models_dir(), str(score) + ".pth")
+        if game.score > 50:
+            agent.model.save(get_models_dir(), str(game.score) + ".pth")
 
-            print('Game', agent.n_games, 'Score', score, 'Record:', best_score)
+        plot_scores.append(game.score)
+        total_score += game.score
+        mean_score = total_score / agent.n_games
+        plot_mean_scores.append(mean_score)
 
-            plot_scores.append(score)
-            total_score += score
-            mean_score = total_score / agent.n_games
-            plot_mean_scores.append(mean_score)
+        print('Game', agent.n_games, 'Score', game.score, 'Record:', game.best_score)
 
-        if agent.n_games > NUM_TRAINING_EPISODES:
-            plot(plot_scores, plot_mean_scores, best_score, get_figures_dir())
-            break
+    plot(plot_scores, plot_mean_scores, game.best_score, get_figures_dir())
 
 
 class TrainingSnakeGame(SnakeGame):

@@ -1,9 +1,9 @@
-from QLearningAgent import SnakeQAgent
+from QLearningAgent import TrainingSnakeGame
 
 
 def main():
-    agent = SnakeQAgent()
-    agent.train()
+    game = TrainingSnakeGame()
+    game.train()
 
 
 if __name__ == "__main__":

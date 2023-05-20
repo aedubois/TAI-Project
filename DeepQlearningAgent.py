@@ -8,10 +8,6 @@ from model import LinearQNet, QTrainer
 from gameModule import SnakeGame, is_collision, RIGHT, DOWN, LEFT, UP
 from helpers import plot
 
-MAX_MEMORY = 100_000
-BATCH_SIZE = 1000
-LR = 0.001
-
 
 def get_models_dir():
     return os.path.join(os.path.dirname(__file__), "deep_q_learning_models/")
@@ -30,54 +26,13 @@ def load_model(model_file_name="None"):
 
 class DeepQLearningAgent:
     def __init__(self, model_file_name="None"):
-        self.n_games = 0
-        self.epsilon = 0  # randomness
-        self.gamma = 0.9  # discount rate
-        self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
         self.model = load_model(model_file_name)
 
-        self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
-
-    def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))  # popleft if MAX_MEMORY is reached
-
-    def train_long_memory(self):
-        if len(self.memory) > BATCH_SIZE:
-            mini_sample = random.sample(self.memory, BATCH_SIZE)  # list of tuples
-        else:
-            mini_sample = self.memory
-
-        states, actions, rewards, next_states, dones = zip(*mini_sample)
-        self.trainer.train_step(states, actions, rewards, next_states, dones)
-
-    def train_short_memory(self, state, action, reward, next_state, done):
-        self.trainer.train_step(state, action, reward, next_state, done)
-
-    def train_next_move(self, deep_q_state):
-        self.epsilon = 80 - self.n_games
-        final_move = [0, 0, 0]
-        if random.randint(0, 200) < self.epsilon:
-            move = random.randint(0, 2)
-            final_move[move] = 1
-        else:
-            state0 = torch.tensor(deep_q_state, dtype=torch.float)
-            prediction = self.model(state0)
-            move = torch.argmax(prediction).item()
-            final_move[move] = 1
-
-        return final_move
-
     def choose_next_move(self, state):
-        deep_q_state = get_deep_q_state(state)
         direction = state[5]
 
-        final_move = [0, 0, 0]
-        state0 = torch.tensor(deep_q_state, dtype=torch.float)
-        prediction = self.model(state0)
-        move = torch.argmax(prediction).item()
-        final_move[move] = 1
-        final_move = adapt_move(final_move, direction)
-        return final_move
+        predicted_move = predict_next_move(get_deep_q_state(state), self.model)
+        return adapt_move(predicted_move, direction)
 
     def eat(self):
         """
@@ -94,59 +49,93 @@ class DeepQLearningAgent:
         pass
 
 
-NUM_TRAINING_EPISODES = 1_000
-
-
-def train():
-    game = SnakeGame()
-    agent = DeepQLearningAgent("None")
-
-    total_score = 0
-    plot_scores = []
-    plot_mean_scores = []
-
-    while agent.n_games < NUM_TRAINING_EPISODES:
-        game.start_run()
-
-        while game.is_alive():
-            deep_q_state_old = get_deep_q_state(game.get_state())
-            final_move = agent.train_next_move(deep_q_state_old)
-
-            adapted_move = adapt_move(final_move, game.get_direction())
-            game.set_next_move(adapted_move)
-
-            game.move_snake()
-            deep_q_state_new = get_deep_q_state(game.get_state())
-            reward = get_reward(game.is_alive(), game.food_eaten)
-
-            done = not game.is_alive()
-
-            agent.train_short_memory(deep_q_state_old, final_move, reward, deep_q_state_new, done)
-            agent.remember(deep_q_state_old, final_move, reward, deep_q_state_new, done)
-
-        agent.n_games += 1
-        agent.train_long_memory()
-
-        if game.score > 50:
-            agent.model.save(get_models_dir(), str(game.score) + ".pth")
-
-        plot_scores.append(game.score)
-        total_score += game.score
-        mean_score = total_score / agent.n_games
-        plot_mean_scores.append(mean_score)
-
-        print('Game', agent.n_games, 'Score', game.score, 'Record:', game.best_score)
-
-    plot(plot_scores, plot_mean_scores, game.best_score, get_figures_dir())
-
-
 class TrainingSnakeGame(SnakeGame):
     def __init__(self):
         super(TrainingSnakeGame, self).__init__()
+        self.max_memory = 100_000
+        self.batch_size = 1000
 
-    def set_next_move(self, move):
-        adapted_move = adapt_move(move)
-        super().set_next_move(adapted_move)
+        self.learning_rate = 0.001
+        self.n_games = 0
+        self.epsilon = 0
+        self.gamma = 0.9
+        self.num_episodes = 1_000
+
+        self.memory = deque(maxlen=self.max_memory)
+
+        self.model = load_model()
+        self.trainer = QTrainer(self.model, lr=self.learning_rate, gamma=self.gamma)
+
+    def remember(self, state, action, reward, next_state, done):
+        self.memory.append((state, action, reward, next_state, done))
+
+    def train_long_memory(self):
+        if len(self.memory) > self.batch_size:
+            mini_sample = random.sample(self.memory, self.batch_size)
+        else:
+            mini_sample = self.memory
+
+        states, actions, rewards, next_states, dones = zip(*mini_sample)
+        self.trainer.train_step(states, actions, rewards, next_states, dones)
+
+    def train_short_memory(self, state, action, reward, next_state, done):
+        self.trainer.train_step(state, action, reward, next_state, done)
+
+    def choose_next_move(self, deep_q_state):
+        self.epsilon = 80 - self.n_games
+        should_explore = random.randint(0, 200) < self.epsilon
+
+        if should_explore:
+            return get_random_move()
+        else:
+            return predict_next_move(deep_q_state, self.model)
+
+    def train(self):
+        game = SnakeGame()
+
+        total_score = 0
+        plot_scores = []
+        plot_mean_scores = []
+
+        while self.n_games < self.num_episodes:
+            self.n_games += 1
+            self.train_one_game()
+
+            if game.score > 50:
+                self.model.save(get_models_dir(), str(game.score) + ".pth")
+
+            plot_scores.append(game.score)
+            total_score += game.score
+            mean_score = total_score / self.n_games
+            plot_mean_scores.append(mean_score)
+
+            print('Game', self.n_games, 'Score', self.score, 'Record:', self.best_score)
+
+        plot(plot_scores, plot_mean_scores, game.best_score, get_figures_dir())
+
+    def train_one_game(self):
+        self.start_run()
+        while self.is_alive():
+            self.next_tick()
+        self.train_long_memory()
+
+    def next_tick(self):
+        deep_q_state_old = get_deep_q_state(self.get_state())
+        final_move = self.choose_next_move(deep_q_state_old)
+        adapted_move = adapt_move(final_move, self.get_direction())
+
+        self.set_next_move(adapted_move)
+        self.move_snake()
+
+        deep_q_state_new = get_deep_q_state(self.get_state())
+        reward = self.get_reward()
+
+        done = not self.is_alive()
+        self.train_short_memory(deep_q_state_old, final_move, reward, deep_q_state_new, done)
+        self.remember(deep_q_state_old, final_move, reward, deep_q_state_new, done)
+
+    def get_reward(self):
+        return 1 if self.food_eaten else -10 if not self.is_alive() else 0
 
 
 def get_deep_q_state(state):
@@ -218,10 +207,17 @@ def adapt_dir(direction):
     return moves_map[direction]
 
 
-def get_reward(is_alive, food_eaten):
-    if not is_alive:
-        return -10
-    elif food_eaten:
-        return 1
-    else:
-        return 0
+def get_random_move():
+    final_move = [0, 0, 0]
+    move = random.randint(0, 2)
+    final_move[move] = 1
+    return final_move
+
+
+def predict_next_move(deep_q_state, model):
+    final_move = [0, 0, 0]
+    state = torch.tensor(deep_q_state, dtype=torch.float)
+    prediction = model(state)
+    move = torch.argmax(prediction).item()
+    final_move[move] = 1
+    return final_move

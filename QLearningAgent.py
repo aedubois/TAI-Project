@@ -47,7 +47,6 @@ class TrainingSnakeGame(SnakeGame):
         plot_mean_scores = []
 
         for episode_idx in range(self.num_episodes):
-            self.start_run()
             self.train_one_game()
 
             print(f"Episode {episode_idx + 1} finished. Highest_Score: {self.best_score}. Current_Score: {self.score}",
@@ -64,6 +63,7 @@ class TrainingSnakeGame(SnakeGame):
 
     def train_one_game(self):
         self.eps = max(self.eps * self.eps_discount, self.min_eps)
+        self.start_run()
         while self.is_alive():
             self.next_tick()
 
@@ -139,6 +139,7 @@ def get_q_state(state):
         int(is_collision((head_r + 1, head_c), rows, columns, grid)),
         int(is_collision((head_r - 1, head_c), rows, columns, grid)),
         int(is_collision((head_r, head_c + 1), rows, columns, grid)),
-        int(is_collision((head_r, head_c - 1), rows, columns, grid))]
+        int(is_collision((head_r, head_c - 1), rows, columns, grid))
+    ]
 
     return tuple(state)

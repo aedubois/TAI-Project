@@ -1,4 +1,5 @@
-from DeepQlearningAgent import train
+from DeepQlearningAgent import TrainingSnakeGame
 
 if __name__ == "__main__":
-    train()
+    game = TrainingSnakeGame()
+    game.train()

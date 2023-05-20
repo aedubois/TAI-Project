@@ -68,14 +68,14 @@ le dossier `weights`.
 
 #### Q-Learning
 ```bash
-poetry run python main.py --ai -q 66.npy 
+poetry run python main.py --ai -q 62.npy 
 ```
 
 Pour lancer le jeu avec l'algorithme Q-Learning, il faut utiliser l'option `-q` et passer en argument le nom du fichier de la qtable à utiliser.
 
 #### Deep Q-Learning
 ```bash
-poetry run python main.py --ai -d 58.pth 
+poetry run python main.py --ai -d 60.pth 
 ```
 
 #### En résumé :
@@ -147,13 +147,17 @@ Pour entrainer un nouveau réseau de neurone pour le snake, il faut lancer le fi
 poetry run python QLearningTrainer.py 
 ```
 
-Les meilleurs `q_tables` seront stockés par score dans le dossier `qtables`, ainsi, par exemple, le fichier `66.npy` contient une qtable qui a reussit à atteindre un score de 66.
+Les meilleurs `q_tables` seront stockés par score dans le dossier `qtables`, ainsi, par exemple, le fichier `62.npy` contient une qtable qui a réussi à atteindre un score de 62.
+
+Une fois la formation terminée, des figures indiquant l'évolution du score au fil des épisodes de formation seront enregistrés dans le dossier `q_learning_figures`.
 
 #### Deep Q-Learning
-Pour entrainer un nouveau réseau de neurone pour le snake, il faut lancer le fichier `DeepQLearningAgent.py`, par exemple:
+Pour entrainer un nouveau réseau de neurone pour le snake, il faut lancer le fichier `DeepQLearningAgent.py`, par exemple :
 
 ```bash
 poetry run python DeepQLearningTrainer.py 
 ```
 
-Les meilleurs modèles seront stockés par score dans le dossier `models`, ainsi, par exemple, le fichier `58.pth` contient un modèle qui a reussit à atteindre un score de 58.
+Les meilleurs modèles seront stockés par score dans le dossier `models`, ainsi, par exemple, le fichier `60.pth` contient un modèle qui a réussi à atteindre un score de 60.
+
+Une fois la formation terminée, des figures indiquant l'évolution du score au fil des épisodes de formation seront enregistrés dans le dossier `q_learning_figures`.

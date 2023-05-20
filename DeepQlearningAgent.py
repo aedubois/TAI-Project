@@ -91,8 +91,6 @@ class TrainingSnakeGame(SnakeGame):
             return predict_next_move(deep_q_state, self.model)
 
     def train(self):
-        game = SnakeGame()
-
         total_score = 0
         plot_scores = []
         plot_mean_scores = []
@@ -101,17 +99,17 @@ class TrainingSnakeGame(SnakeGame):
             self.n_games += 1
             self.train_one_game()
 
-            if game.score > 50:
-                self.model.save(get_models_dir(), str(game.score) + ".pth")
+            if self.score > 50:
+                self.model.save(get_models_dir(), str(self.score) + ".pth")
 
-            plot_scores.append(game.score)
-            total_score += game.score
+            plot_scores.append(self.score)
+            total_score += self.score
             mean_score = total_score / self.n_games
             plot_mean_scores.append(mean_score)
 
             print('Game', self.n_games, 'Score', self.score, 'Record:', self.best_score)
 
-        plot(plot_scores, plot_mean_scores, game.best_score, get_figures_dir())
+        plot(plot_scores, plot_mean_scores, self.best_score, get_figures_dir())
 
     def train_one_game(self):
         self.start_run()

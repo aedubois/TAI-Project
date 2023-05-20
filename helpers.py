@@ -5,6 +5,7 @@ from IPython import display
 
 plt.ion()
 
+
 def plot(scores, mean_scores, highest_score, dir_name):
     display.clear_output(wait=True)
     display.display(plt.gcf())

@@ -230,7 +230,3 @@ def get_reward(is_alive, food_eaten):
         return 1
     else:
         return 0
-
-
-if __name__ == '__main__':
-    train()

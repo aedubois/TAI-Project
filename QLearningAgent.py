@@ -1,8 +1,6 @@
 import os
 import random
-
 import numpy as np
-
 from gameModule import SnakeGame, RIGHT, LEFT, UP, DOWN, is_collision
 from helpers import plot
 
@@ -121,16 +119,10 @@ class TrainingSnakeGame(SnakeGame):
         new_ql_state = get_q_state(new_state)
         reward = self.get_reward()
 
-        if reward is not None:
-            bellman(agent.table, current_ql_state, MOVES.index(next_move), new_ql_state, reward, agent)
+        bellman(agent.table, current_ql_state, MOVES.index(next_move), new_ql_state, reward, agent)
 
     def get_reward(self):
-        if self.food_eaten:
-            return 1
-        if not self.is_alive():
-            return -10
-
-        return -0.1
+        return 1 if self.food_eaten else -10 if not self.is_alive() else -0.1
 
 
 def get_q_state(state):

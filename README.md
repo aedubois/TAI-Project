@@ -10,17 +10,11 @@ artificiels entrainé grâce à un algorithme génétique.
 
 ## Installation
 
-Pour installer le jeu, commencez par copier le dépot du livre ([AI-book sur github][ia-gh]),
+Pour installer le jeu, commencez par copier le dépot ([Snake game sur github](https://github.com/aedubois/TAI-Project)),
 soit en recupérant l'archive zip depuis github, soit à l'aide de l'outil git:
 
 ```
-git clone https://github.com/iridia-ulb/AI-book
-```
-
-Puis, accedez au dossier du jeu:
-
-```bash
-cd Snake
+git clone https://github.com/aedubois/TAI-Project
 ```
 
 Après avoir installé python et poetry, rendez vous dans ce dossier et installez les
@@ -159,9 +153,7 @@ Les meilleurs `q_tables` seront stockés par score dans le dossier `qtables`, ai
 Pour entrainer un nouveau réseau de neurone pour le snake, il faut lancer le fichier `DeepQLearningAgent.py`, par exemple:
 
 ```bash
-poetry run python DeepQLearningAgent.py 
+poetry run python DeepQLearningTrainer.py 
 ```
 
 Les meilleurs modèles seront stockés par score dans le dossier `models`, ainsi, par exemple, le fichier `58.pth` contient un modèle qui a reussit à atteindre un score de 58.
-
-[ia-gh]: https://github.com/iridia-ulb/AI-book

@@ -160,4 +160,4 @@ poetry run python DeepQLearningTrainer.py
 
 Les meilleurs modèles seront stockés par score dans le dossier `models`, ainsi, par exemple, le fichier `60.pth` contient un modèle qui a réussi à atteindre un score de 60.
 
-Une fois la formation terminée, des figures indiquant l'évolution du score au fil des épisodes de formation seront enregistrés dans le dossier `q_learning_figures`.
+Une fois la formation terminée, des figures indiquant l'évolution du score au fil des épisodes de formation seront enregistrés dans le dossier `deep_q_learning_figures`.

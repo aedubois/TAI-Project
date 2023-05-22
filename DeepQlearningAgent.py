@@ -83,6 +83,8 @@ class TrainingSnakeGame(SnakeGame):
 
     def choose_next_move(self, deep_q_state):
         self.epsilon = 80 - self.n_games
+        if self.epsilon < 0:
+            self.epsilon = 2
         should_explore = random.randint(0, 200) < self.epsilon
 
         if should_explore:

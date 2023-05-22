@@ -4,7 +4,7 @@ from collections import deque
 
 import torch
 
-from model import LinearQNet, QTrainer
+from DeepQLearningModel import LinearQNet, QTrainer
 from gameModule import SnakeGame, is_collision, RIGHT, DOWN, LEFT, UP
 from helpers import plot
 

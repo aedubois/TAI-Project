@@ -162,10 +162,14 @@ class SnakeGame:
                 self.previous_move = self.next_move
                 self.next_move = None
 
-            if self.steps_without_food > 150:
+            if self.steps_without_food > self.starvation_limit():
                 self.alive = False
                 if self.score > self.best_score:
                     self.best_score = self.score
+
+    def starvation_limit(self):
+        length = len(self.snake)
+        return 100+length*5
 
     def get_state(self):
         return self.grid, self.score, self.alive, self.snake, self.food, self.get_direction(), \

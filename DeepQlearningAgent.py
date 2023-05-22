@@ -18,7 +18,7 @@ def get_figures_dir():
 
 
 def load_model(model_file_name="None"):
-    model = LinearQNet(11, 256, 3)
+    model = LinearQNet(311, 256, 3)
     if model_file_name != "None":
         model.load_state_dict(torch.load(get_models_dir() + model_file_name))
     return model
@@ -99,7 +99,7 @@ class TrainingSnakeGame(SnakeGame):
             self.n_games += 1
             self.train_one_game()
 
-            if self.score > 50:
+            if self.score > self.best_score and self.score > 50:
                 self.model.save(get_models_dir(), str(self.score) + ".pth")
 
             plot_scores.append(self.score)
@@ -133,7 +133,7 @@ class TrainingSnakeGame(SnakeGame):
         self.remember(deep_q_state_old, final_move, reward, deep_q_state_new, done)
 
     def get_reward(self):
-        return 1 if self.food_eaten else -10 if not self.is_alive() else 0
+        return 1 if self.food_eaten else -10 if not self.is_alive() else -0.1
 
 
 def get_deep_q_state(state):
@@ -183,9 +183,35 @@ def get_deep_q_state(state):
         int(food[1] > head[1])  # food down
     ]
 
+    xg = head[0]-5
+    xd = head[0]+5
+    yh = head[1]-5
+    yb = head[1]+5
+
+    for j in range(10):
+        for i in range(10):
+            if xg+i < 0 or xd+i >= len(grid) or yh+j < 0 or yb+j >= len(grid[0]):
+                list = [0,0,0]
+                for a in list:
+                    state.append(a)
+            else:
+                list = adapt_cell(grid[xg+i][yh+j])
+                for a in list:
+                    state.append(a)
+
     return tuple(state)
 
-
+def adapt_cell(char):
+    list = ["+"," ","#","@","A","S","C"]
+    adapt_list = [0,1,2,3,4,5,6]
+    adapt_list = [[0,0,1],
+                  [0,1,0],
+                  [0,1,1],
+                  [1,0,0],
+                  [1,0,1],
+                  [1,1,0],
+                  [1,1,1]]
+    return adapt_list[list.index(char)]
 def adapt_move(next_move, direction):
     moves = ["right", "down", "left", "up"]
     start_point = moves.index(direction)

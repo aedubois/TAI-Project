@@ -50,7 +50,7 @@ class DeepQLearningAgent:
 
 
 class TrainingSnakeGame(SnakeGame):
-    def __init__(self):
+    def __init__(self, num_episodes=1_000):
         super(TrainingSnakeGame, self).__init__()
         self.max_memory = 100_000
         self.batch_size = 1000
@@ -59,7 +59,7 @@ class TrainingSnakeGame(SnakeGame):
         self.n_games = 0
         self.epsilon = 0
         self.gamma = 0.9
-        self.num_episodes = 1_000
+        self.num_episodes = num_episodes
 
         self.memory = deque(maxlen=self.max_memory)
 

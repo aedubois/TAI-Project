@@ -31,14 +31,14 @@ class SnakeQAgent:
 
 
 class TrainingSnakeGame(SnakeGame):
-    def __init__(self):
+    def __init__(self, num_episodes=10_000):
         super(TrainingSnakeGame, self).__init__()
         self.discount_rate = 0.95
         self.learning_rate = 0.01
         self.eps = 1.0
         self.eps_discount = 0.992
         self.min_eps = 0.001
-        self.num_episodes = 10_000
+        self.num_episodes = num_episodes
         self.agent = SnakeQAgent()
 
     def train(self):
